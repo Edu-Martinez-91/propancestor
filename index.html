@@ -144,7 +144,23 @@ h3 .ic{margin-right:.4rem;color:var(--parch2)}
 #fan-legend .leg-item{display:inline-flex;align-items:center;gap:.3rem;font-size:.64rem;color:var(--fog);font-weight:500}
 #fan-legend .leg-sw{display:inline-block;width:13px;height:13px;border-radius:3px;border:1px solid rgba(0,0,0,.1)}
 #fan-svg-holder{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
-#fan-svg-holder svg{display:block;margin:0 auto;max-width:100%;height:auto}
+#fan-svg-holder svg{display:block;margin:0 auto;max-width:100%;height:auto;max-height:calc(100vh - 230px)}
+
+/* Aviso de bienvenida cuando el árbol está completamente vacío: empuja al
+   usuario a pulsar el sector central, en vez de dejarle ante un abanico
+   en blanco sin pista de por dónde empezar. */
+#fan-welcome{max-width:640px;margin:.6rem auto 0;padding:.7rem .9rem;background:#fff;border:1px solid var(--amber-lt);border-radius:8px;text-align:center;box-shadow:var(--shadow)}
+#fan-welcome .ic{color:var(--amber);margin-right:.3rem}
+#fan-welcome strong{color:var(--ink)}
+#fan-welcome p{font-size:.78rem;color:var(--fog);margin-top:.2rem}
+.fan-welcome-ring{fill:none;stroke:var(--amber);stroke-width:3;pointer-events:none;animation:welcomePulse 2s ease-in-out infinite}
+@keyframes welcomePulse{
+  0%,100%{stroke-opacity:.25;stroke-width:3}
+  50%{stroke-opacity:.9;stroke-width:6}
+}
+@media (prefers-reduced-motion: reduce){
+  .fan-welcome-ring{animation:none;stroke-opacity:.7;stroke-width:4}
+}
 .fan-sector{cursor:pointer;transition:opacity .12s}
 .fan-sector:hover{opacity:.82}
 .fan-label{font-family:'Inter',sans-serif;pointer-events:none;fill:var(--ink)}
@@ -469,6 +485,7 @@ textarea{resize:vertical;min-height:54px}
 
 <!-- ══ VISTA ABANICO ══ -->
 <div id="view-fan">
+  <div id="fan-welcome" style="display:none"></div>
   <div id="fan-controls">
     <label>Generaciones:</label>
     <select id="fan-depth" onchange="renderFan()">
@@ -1432,11 +1449,25 @@ function renderFan(){
   var H = radius + 80;
   var cx = W/2, cy = H - 40;
 
-  var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif">';
+  // Tamaño en pantalla: que quepa tanto a lo ancho como a lo alto del
+  // hueco disponible bajo la cabecera, en vez de fiarnos del auto-sizing
+  // de CSS para un <svg> sin width/height propios (poco consistente
+  // entre navegadores cuando hay max-width Y max-height a la vez).
+  var availW = Math.max(280, holder.clientWidth || window.innerWidth - 40);
+  var holderTop = holder.getBoundingClientRect().top;
+  var availH = Math.max(240, window.innerHeight - holderTop - 16);
+  var dispScale = Math.min(availW/W, availH/H, 1);
+  var dispW = Math.round(W*dispScale), dispH = Math.round(H*dispScale);
+
+  var svg = '<svg viewBox="0 0 '+W+' '+H+'" width="'+dispW+'" height="'+dispH+'" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif">';
 
   // raíz: semicírculo central con nombre completo + fecha
   var root = nodes['0'];
+  var isFreshTree = Object.keys(nodes).length===1 && !root.firstName && !root.surname1 && !root.surname2;
   svg += '<path class="fan-sector" d="M '+(cx-rRoot)+' '+cy+' A '+rRoot+' '+rRoot+' 0 0 1 '+(cx+rRoot)+' '+cy+' Z" fill="'+fanColor('0')+'" stroke="#fff" stroke-width="1.5" onclick="openModal(\'0\')"/>';
+  if(isFreshTree){
+    svg += '<path class="fan-welcome-ring" d="M '+(cx-rRoot-5)+' '+cy+' A '+(rRoot+5)+' '+(rRoot+5)+' 0 0 1 '+(cx+rRoot+5)+' '+cy+' Z"/>';
+  }
   var rootLines = buildSectorLines(root, 0);
   if(!rootLines.length) rootLines = [(root && (root.firstName||root.surname1)) ? (root.firstName+' '+(root.surname1||'')).trim() : 'Tú'];
   if(!rootLines.length) rootLines = ['Tú'];
@@ -1527,6 +1558,17 @@ function renderFan(){
   }
   svg += '</svg>';
   holder.innerHTML = svg;
+
+  var welcome = document.getElementById('fan-welcome');
+  if(welcome){
+    if(isFreshTree){
+      welcome.style.display = 'block';
+      welcome.innerHTML = ic('user') + '<strong>Empieza por ti.</strong> Pulsa el sector resaltado en el centro del abanico para introducir tus datos.'
+        + '<p>A partir de ahí, cada acta que añadas a tus descendientes irá rellenando solo el árbol hacia atrás.</p>';
+    } else {
+      welcome.style.display = 'none';
+    }
+  }
 }
 
 function firstWord(s){ return (s||'').split(' ')[0]; }
@@ -2783,7 +2825,8 @@ function showSaveIndicator(){
 // SUPABASE — AUTH + SYNC
 // ═══════════════════════════════════════════════════
 function sbConfigured(){
-  return SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined';
+  return SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined'
+    && SUPABASE_URL.indexOf('TU_SUPABASE_URL_AQUI')===-1 && SUPABASE_ANON_KEY.indexOf('TU_SUPABASE_ANON_KEY_AQUI')===-1;
 }
 
 function authMsg(msg, cls){
