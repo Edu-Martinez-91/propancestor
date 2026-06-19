@@ -14,6 +14,8 @@
 
 *Abre `index.html` en cualquier navegador — no requiere instalación.*
 
+🇪🇸 **Español** · [🇬🇧 English](README.en.md)
+
 </div>
 
 ---
@@ -23,6 +25,22 @@
 **propancestor** es una aplicación web para investigar y visualizar tu árbol genealógico. Está pensada para personas que buscan partidas en registros civiles y archivos parroquiales españoles: cada acta encontrada se vuelca al árbol, los rangos de fechas se triangulan con los datos de hijos y hermanos, y el siguiente acta a buscar aparece sola, ordenada por probabilidad y vía documental.
 
 Toda la aplicación cabe en un único `index.html`. Funciona sin conexión gracias a `localStorage` y sincroniza en la nube con Supabase cuando hay red. Cero dependencias en el navegador, cero pasos de build.
+
+---
+
+## ¿Por qué propancestor?
+
+La mayoría de árboles genealógicos online (FamilySearch, MyHeritage, Geni...) están diseñados para diásporas: familias que migraron entre países a lo largo de los siglos, y cuyo árbol se mueve por continentes en pocas generaciones. **propancestor nace de un caso distinto: el de familias españolas sin apenas movilidad geográfica**, donde lo que importa no es por qué país pasó cada antepasado, sino por qué *pueblo*.
+
+1. **Granularidad de pueblo, no de país.** Donde FamilySearch te ofrece un campo "país" por persona, aquí cada perfil tiene su municipio de nacimiento, y el abanico se puede colorear por pueblo para ver de un vistazo cómo se concentran o dispersan las raíces familiares en una misma comarca.
+
+2. **Aprovecha la trazabilidad del sistema español de apellidos.** En España las mujeres no pierden su apellido al casarse, y cada persona lleva dos apellidos (uno paterno, uno materno) en vez de uno solo. Eso da una trazabilidad documental que no existe en otros países, y es justo lo que permite la propagación de datos del punto siguiente: un apellido materno en un acta identifica directamente a una estirpe completa, no se diluye en una generación.
+
+3. **Propagación de la información hacia generaciones anteriores.** Al introducir los datos de un acta de nacimiento (civil o parroquial) de un antepasado, la app no solo registra a esa persona: prepara automáticamente el perfil de sus padres con los datos que ya constan en el acta (nombre, edad declarada, origen), listos para pedir *sus* actas. Y si esa misma acta declara también la edad y el pueblo de origen de los abuelos —algo habitual en partidas antiguas—, **propancestor** da un paso más y prepara también los perfiles de los abuelos. Una sola visita al registro o al archivo puede destapar tres generaciones de golpe.
+
+4. **Calculador de rangos de edad de nacimiento.** Cada acta aporta una edad declarada de los padres en ese momento; la app cruza esa información con la de hermanos y descendientes para ir estrechando, por intersección de ventanas, el rango de nacimiento real de cada antepasado — incluso de aquellos de los que nunca se llegue a tener un acta propia.
+
+5. **Guía documental específica del caso español.** La app distingue automáticamente si un acta hay que pedirla en el **Registro Civil** (nacimientos desde el 1 de enero de 1871) o en el **archivo parroquial** (anteriores a esa fecha), y permite marcar cuándo una solicitud ha sido rechazada en uno u otro lugar para reordenar las prioridades. La lista de "actas a buscar" se puede ordenar por fecha de nacimiento más reciente (las más fáciles de obtener primero) y filtrar por pueblo, para que al planificar una visita a una sola parroquia tengas ya lista la lista completa de partidas que puedes pedir allí.
 
 ---
 
@@ -44,6 +62,11 @@ Verde si la partida está obtenida, ámbar si está lista para buscar, granate s
 Un color HSL único para cada municipio del árbol, con leyenda automática.
 
 <p align="center"><img src="docs/fan_town.png" alt="Abanico por pueblo" width="780"></p>
+
+### Panel "Actas a buscar"
+Lista priorizada de partidas pendientes, clasificadas en Registro Civil / Parroquia / vías agotadas, filtrables por pueblo y ordenables por fecha de nacimiento. El tick "Acta solicitada" arranca una cuenta de días en espera por persona.
+
+<p align="center"><img src="docs/actas_pendientes.png" alt="Panel de actas a buscar con contador de días en espera" width="780"></p>
 
 ---
 
@@ -112,8 +135,10 @@ El `index.html` de este repositorio **no incluye credenciales reales** — verá
 │   ├── logo.svg                # Logo del proyecto
 │   ├── fan_branch.png          # Captura abanico por estirpe
 │   ├── fan_status.png          # Captura abanico por estado
-│   └── fan_town.png            # Captura abanico por pueblo
-└── README.md
+│   ├── fan_town.png            # Captura abanico por pueblo
+│   └── actas_pendientes.png    # Captura panel de actas con contador de espera
+├── README.md                   # Este archivo (español)
+└── README.en.md                # Versión en inglés
 ```
 
 ---
