@@ -9,7 +9,7 @@
 [![Made with vanilla JS](https://img.shields.io/badge/Vanilla-JS-f7df1e?logo=javascript&logoColor=black)](https://developer.mozilla.org/docs/Web/JavaScript)
 [![Supabase](https://img.shields.io/badge/Backend-Supabase-3ecf8e?logo=supabase&logoColor=white)](https://supabase.com)
 [![Deploy: Netlify](https://img.shields.io/badge/Deploy-Netlify-00c7b7?logo=netlify&logoColor=white)](https://www.netlify.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue)](#licencia)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](#licencia)
 [![Single file](https://img.shields.io/badge/Single--file-HTML-orange)]()
 
 *Abre `index.html` en cualquier navegador — no requiere instalación.*
@@ -164,7 +164,7 @@ El `index.html` de este repositorio **no incluye credenciales reales** — verá
 
 ## Licencia
 
-[MIT](LICENSE). Úsalo, modifícalo y compártelo libremente.
+[GPLv3](LICENSE). Puedes usarlo, estudiarlo, modificarlo y redistribuirlo libremente, siempre que cualquier versión modificada que distribuyas siga siendo de código abierto bajo la misma licencia — no se permiten forks cerrados o propietarios.
 
 ---
 
