@@ -1,0 +1,3092 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>propancestor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --ink:#1c1712; --parch:#f6f0e4; --parch2:#ede4cf; --parch3:#ddd0b8;
+  --amber:#96700e; --amber-lt:#c4a040; --rust:#7a3020; --rust-lt:#b85535;
+  --moss:#2e5438; --moss-lt:#4a8a5c; --fog:#6b5e48; --fog-lt:#9c8e78;
+  --locked-bg:#f0ebe0; --locked-bd:#cfc5b0;
+  --shadow:0 2px 10px rgba(28,23,18,.13); --shadow-lg:0 8px 32px rgba(28,23,18,.18);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--parch);color:var(--ink);font-family:'Inter',sans-serif;font-size:13px;line-height:1.5;min-height:100vh}
+
+/* ══ HEADER ══ */
+#app-header{position:sticky;top:0;z-index:50;background:var(--ink);color:var(--parch);display:flex;align-items:center;justify-content:space-between;padding:.4rem .6rem;min-height:48px;box-shadow:0 2px 12px rgba(0,0,0,.35);gap:.4rem}
+#app-header h1{font-family:'EB Garamond',serif;font-size:1.15rem;letter-spacing:.02em;font-weight:400;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:.55rem}
+.brand-mark{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0}
+.brand-tree{width:32px;height:32px;display:block;overflow:visible}
+.brand-tree .bt-c{fill:var(--amber-lt)}
+.brand-tree .bt-b{stroke:var(--amber-lt);stroke-width:1.4;stroke-linecap:round;transform-origin:14px 14px;animation:branchGrow 4.5s ease-in-out infinite}
+.brand-tree .bt-t{fill:var(--amber-lt);transform-origin:14px 14px;animation:tipPulse 4.5s ease-in-out infinite}
+.brand-tree .bt-b:nth-of-type(2){animation-delay:0s}
+.brand-tree .bt-b:nth-of-type(3){animation-delay:.2s}
+.brand-tree .bt-b:nth-of-type(4){animation-delay:.4s}
+.brand-tree .bt-b:nth-of-type(5){animation-delay:.6s}
+.brand-tree .bt-b:nth-of-type(6){animation-delay:.8s}
+.brand-tree .bt-b:nth-of-type(7){animation-delay:1.0s}
+.brand-tree .bt-t:nth-of-type(8){animation-delay:0s}
+.brand-tree .bt-t:nth-of-type(9){animation-delay:.2s}
+.brand-tree .bt-t:nth-of-type(10){animation-delay:.4s}
+.brand-tree .bt-t:nth-of-type(11){animation-delay:.6s}
+.brand-tree .bt-t:nth-of-type(12){animation-delay:.8s}
+.brand-tree .bt-t:nth-of-type(13){animation-delay:1.0s}
+@keyframes branchGrow{
+  0%,100%{transform:scale(.55);opacity:.55}
+  45%,65%{transform:scale(1);opacity:1}
+}
+@keyframes tipPulse{
+  0%,100%{transform:scale(.2);opacity:0}
+  45%,65%{transform:scale(1);opacity:1}
+}
+@media (prefers-reduced-motion: reduce){
+  .brand-tree .bt-b,.brand-tree .bt-t{animation:none;transform:scale(1);opacity:1}
+}
+.brand-name{color:var(--parch);font-weight:500;letter-spacing:.03em;font-family:'Inter',sans-serif;font-size:.95rem}
+
+/* ══ ICONOS SVG INLINE ══ */
+.ic{display:inline-block;width:1.05em;height:1.05em;vertical-align:-0.18em;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.fsec-title .ic{margin-right:.32rem;color:var(--amber)}
+.vtab .ic{margin-right:.25rem;color:currentColor}
+h3 .ic{margin-right:.4rem;color:var(--parch2)}
+.spanel-hd h3 .ic{color:var(--parch2)}
+.header-actions{display:flex;gap:.25rem;align-items:center;flex-wrap:nowrap;justify-content:flex-end;flex-shrink:0}
+.hbtn{padding:.3rem .55rem;border-radius:4px;font-size:.66rem;font-weight:600;letter-spacing:.03em;font-family:'Inter',sans-serif;cursor:pointer;border:1px solid transparent;transition:background .15s;white-space:nowrap;flex-shrink:0;line-height:1}
+.hbtn-amber{background:var(--amber);color:#fff;border-color:var(--amber)}
+.hbtn-amber:hover{background:#7a5c0c}
+.hbtn-rust{background:transparent;color:var(--rust-lt);border-color:var(--rust-lt)}
+.hbtn-rust:hover{background:rgba(180,80,50,.1)}
+.hbtn-ghost{background:transparent;color:var(--parch2);border-color:rgba(246,240,228,.3)}
+.hbtn-ghost:hover{background:rgba(246,240,228,.1)}
+.hbtn-moss{background:var(--moss);color:#fff;border-color:var(--moss)}
+.hbtn-icon{background:transparent;border:none;color:var(--parch2);cursor:pointer;padding:.3rem;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .15s, color .15s, transform .5s}
+.hbtn-icon:hover{background:rgba(246,240,228,.1);color:var(--amber-lt)}
+.hbtn-icon:hover svg{transform:rotate(45deg);transition:transform .35s ease}
+.hbtn-icon svg{transition:transform .35s ease}
+
+/* Botones ghost dentro del modal de configuración: el fondo es claro, así que
+   el color por defecto (var(--parch2), pensado para el header oscuro) no se
+   ve. Forzamos colores oscuros sobre claro para que sí se distingan. */
+#settings-bd .hbtn-ghost{color:var(--ink);border-color:var(--parch3);background:#fff;font-size:.78rem;padding:.55rem .8rem}
+#settings-bd .hbtn-ghost:hover{background:var(--parch2)}
+#settings-bd .modal-ft .hbtn-ghost{font-size:.75rem;padding:.4rem .9rem}
+#settings-bd .hbtn-amber{font-size:.78rem;padding:.55rem .8rem}
+#settings-bd .hbtn-rust{font-size:.78rem;padding:.55rem .8rem;background:#fff}
+
+/* Modal guía para solicitar certificado: mismos colores legibles que settings */
+#cert-help-bd .hbtn-ghost{color:var(--ink);border-color:var(--parch3);background:#fff;font-size:.75rem;padding:.4rem .9rem}
+#cert-help-bd .hbtn-ghost:hover{background:var(--parch2)}
+.cert-steps{margin:0;padding-left:1.1rem;font-size:.76rem;color:var(--ink);line-height:1.5}
+.cert-steps > li{margin-bottom:.7rem}
+.cert-steps .cert-step-h{font-family:'EB Garamond',serif;font-size:.95rem;color:var(--amber);font-weight:600;margin-bottom:.15rem}
+.cert-steps ul{margin:0;padding-left:1rem;font-size:.74rem;color:var(--fog)}
+.cert-steps ul li{margin:.1rem 0}
+.cert-steps em{font-style:normal;color:var(--ink);background:var(--parch2);padding:.04rem .3rem;border-radius:3px;font-size:.7rem}
+@media(max-width:520px){
+  #app-header h1{font-size:1rem;gap:.4rem}
+  .brand-mark,.brand-tree{width:28px;height:28px}
+  .brand-name{font-size:.85rem}
+  .hbtn{padding:.28rem .42rem;font-size:.6rem}
+}
+
+/* ══ AUTH OVERLAY ══ */
+#auth-overlay{position:fixed;inset:0;background:var(--parch);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem}
+.auth-card{background:#fff;border-radius:10px;box-shadow:var(--shadow-lg);max-width:380px;width:100%;padding:2rem 1.75rem;border:1px solid var(--parch3)}
+.auth-card h2{font-family:'EB Garamond',serif;font-size:1.5rem;font-weight:400;text-align:center;margin-bottom:.3rem}
+.auth-card p{font-size:.78rem;color:var(--fog);text-align:center;margin-bottom:1.4rem}
+.auth-card input{width:100%;padding:.6rem .7rem;border:1px solid var(--parch3);border-radius:5px;font-family:'Inter',sans-serif;font-size:.85rem;margin-bottom:.6rem;background:var(--parch)}
+.auth-card input:focus{outline:none;border-color:var(--amber-lt);background:#fff}
+.auth-btn{width:100%;padding:.6rem;border-radius:5px;font-weight:600;font-size:.85rem;cursor:pointer;border:1px solid transparent;margin-bottom:.5rem;font-family:'Inter',sans-serif}
+.auth-btn.primary{background:var(--amber);color:#fff}
+.auth-btn.primary:hover{background:#7a5c0c}
+.auth-btn.secondary{background:transparent;color:var(--fog);border-color:var(--parch3)}
+.auth-btn.local{background:transparent;color:var(--moss);border-color:var(--moss-lt);font-size:.75rem}
+.auth-msg{font-size:.72rem;text-align:center;margin-top:.4rem;min-height:1em}
+.auth-msg.err{color:var(--rust-lt)}
+.auth-msg.ok{color:var(--moss-lt)}
+
+/* ══ TABS ══ */
+#view-tabs{display:flex;gap:0;background:var(--parch2);border-bottom:1px solid var(--parch3);padding:0 .5rem;overflow-x:auto}
+.vtab{padding:.55rem .9rem;font-size:.72rem;font-weight:600;letter-spacing:.04em;color:var(--fog);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Inter',sans-serif}
+.vtab.active{color:var(--amber);border-bottom-color:var(--amber)}
+
+/* ══ FAN CHART ══ */
+#fan-wrap{padding:.75rem .5rem .25rem;overflow:hidden}
+#fan-controls{display:flex;justify-content:center;gap:.5rem;align-items:center;padding:.3rem 0 .5rem;flex-wrap:wrap}
+#fan-controls label{font-size:.68rem;color:var(--fog);font-weight:600}
+#fan-controls select{padding:.2rem .4rem;border:1px solid var(--parch3);border-radius:4px;font-size:.72rem;background:#fff}
+#fan-legend{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:.55rem .9rem;padding:.3rem .6rem .6rem;margin:0 auto;max-width:680px}
+#fan-legend .leg-item{display:inline-flex;align-items:center;gap:.3rem;font-size:.64rem;color:var(--fog);font-weight:500}
+#fan-legend .leg-sw{display:inline-block;width:13px;height:13px;border-radius:3px;border:1px solid rgba(0,0,0,.1)}
+#fan-svg-holder{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#fan-svg-holder svg{display:block;margin:0 auto;max-width:100%;height:auto}
+.fan-sector{cursor:pointer;transition:opacity .12s}
+.fan-sector:hover{opacity:.82}
+.fan-label{font-family:'Inter',sans-serif;pointer-events:none;fill:var(--ink)}
+.fan-label.light{fill:#fff}
+
+/* ══ SEARCH BOX ══ */
+#searchbox-wrap{padding:.5rem .75rem;max-width:700px;margin:0 auto;position:relative}
+#searchbox{width:100%;padding:.5rem .75rem;border:1px solid var(--parch3);border-radius:6px;font-size:.85rem;font-family:'Inter',sans-serif;background:#fff}
+#searchbox:focus{outline:none;border-color:var(--amber-lt)}
+#search-results{position:absolute;top:100%;left:.75rem;right:.75rem;background:#fff;border:1px solid var(--parch3);border-radius:6px;box-shadow:var(--shadow-lg);z-index:80;max-height:280px;overflow-y:auto;display:none}
+#search-results.open{display:block}
+.sr-item{padding:.5rem .75rem;cursor:pointer;border-bottom:1px solid var(--parch2);font-size:.8rem}
+.sr-item:hover{background:var(--parch)}
+.sr-item .sr-role{font-size:.65rem;color:var(--fog);text-transform:uppercase;letter-spacing:.05em}
+
+/* ══ PANELS ══ */
+.panel-wrap{max-width:960px;margin:.75rem auto 2rem;padding:0 .75rem}
+.spanel{background:#fff;border-radius:8px;border:1px solid var(--amber-lt);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1.25rem}
+.spanel-hd{background:var(--amber);color:#fff;padding:.7rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.spanel-hd h3{font-family:'EB Garamond',serif;font-size:1rem;font-weight:400}
+.spanel-hd p{font-size:.68rem;opacity:.85;margin-top:.05rem}
+.info-btn{width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-size:.7rem;font-weight:700;cursor:pointer;flex-shrink:0;font-family:'EB Garamond',serif}
+.info-pop{display:none;background:#fffbe8;border-bottom:1px solid var(--parch3);padding:.75rem 1rem;font-size:.72rem;line-height:1.6;color:#5c4a10}
+.info-pop.open{display:block}
+.info-pop strong{color:#3d3008}
+
+/* filtros del panel */
+.panel-filters{display:flex;gap:.4rem;padding:.6rem 1rem;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--parch2);background:var(--parch)}
+.chip{padding:.22rem .65rem;border-radius:20px;font-size:.68rem;font-weight:600;border:1px solid var(--parch3);background:#fff;color:var(--fog);cursor:pointer;font-family:'Inter',sans-serif}
+.chip.active{background:var(--amber);color:#fff;border-color:var(--amber)}
+.panel-filters select{padding:.22rem .45rem;border:1px solid var(--parch3);border-radius:4px;font-size:.7rem;background:#fff;margin-left:auto}
+
+.sitems{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:.65rem;padding:1rem}
+.sitem{padding:.65rem .85rem;background:var(--parch);border-radius:6px;border-left:3px solid var(--parch3);cursor:pointer;transition:transform .12s,box-shadow .12s}
+.sitem:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.sitem.g-registro{border-left-color:var(--moss-lt)}
+.sitem.g-parroquia{border-left-color:var(--amber-lt)}
+.sitem.g-agotado{border-left-color:var(--rust-lt);opacity:.8}
+.sitem-role{font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--fog);margin-bottom:.15rem;display:flex;justify-content:space-between;gap:.3rem}
+.sitem-name{font-family:'EB Garamond',serif;font-size:.95rem}
+.sitem-data{font-size:.7rem;color:var(--fog);margin-top:.25rem;line-height:1.6}
+.sitem-data strong{color:var(--ink)}
+.cert-cta{display:flex;gap:.5rem;align-items:center;padding:.6rem .9rem .4rem}
+.cert-cta-btn{flex:1;font-size:.72rem;font-weight:600;padding:.45rem .65rem;border-radius:6px;border:1px solid var(--moss);background:var(--moss);color:#fff;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.02em;transition:background .15s;display:inline-flex;align-items:center;justify-content:center;gap:.35rem}
+.cert-cta-btn:hover{background:#3d6f4c}
+.cert-cta-info{width:26px;height:26px;border-radius:50%;border:1px solid var(--parch3);background:#fff;color:var(--fog);font-style:italic;font-family:'EB Garamond',serif;font-weight:600;cursor:pointer;font-size:.85rem;line-height:1;padding:0;flex-shrink:0;transition:background .15s, color .15s}
+.cert-cta-info:hover{background:var(--parch2);color:var(--ink)}
+
+/* Tick "acta solicitada" dentro de cada item de registro civil */
+.cert-req{display:flex;align-items:center;gap:.55rem;margin-top:.55rem;padding-top:.45rem;border-top:1px dashed var(--parch3);font-size:.7rem;color:var(--fog);flex-wrap:wrap}
+.cert-req-tick{display:inline-flex;align-items:center;gap:.35rem;cursor:pointer;user-select:none}
+.cert-req-tick input{margin:0;cursor:pointer;accent-color:var(--moss)}
+.cert-req-tick span{font-weight:600;color:var(--ink)}
+.cert-req-days{font-style:italic;color:var(--amber);font-weight:500;flex:1;min-width:0}
+.cert-req-restart{width:22px;height:22px;border-radius:50%;border:1px solid var(--parch3);background:#fff;color:var(--fog);cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s,transform .25s}
+.cert-req-restart:hover{background:var(--parch2);color:var(--ink);transform:rotate(-60deg)}
+.badge{display:inline-block;padding:.08rem .4rem;border-radius:3px;font-size:.58rem;font-weight:700;letter-spacing:.04em}
+.badge.registro{background:rgba(74,138,92,.15);color:var(--moss)}
+.badge.parroquia{background:rgba(196,160,64,.2);color:#7a5c0c}
+.badge.agotado{background:rgba(184,85,53,.15);color:var(--rust)}
+.no-data-msg{padding:1.25rem;text-align:center;color:var(--fog-lt);font-style:italic;font-size:.8rem}
+
+/* ══ STATS APELLIDOS ══ */
+.stats-list{padding:1rem}
+.stat-row-wrap{margin-bottom:.45rem}
+.stat-row{display:flex;align-items:center;gap:.6rem;cursor:pointer;padding:.15rem 0;border-radius:4px;transition:background .15s}
+.stat-row:hover{background:rgba(216,168,80,.07)}
+.stat-name{width:140px;font-size:.78rem;font-weight:600;text-align:right;flex-shrink:0;font-family:'EB Garamond',serif;user-select:none}
+.stat-caret{display:inline-block;width:.7rem;color:var(--fog-lt);font-size:.7rem;transition:transform .15s}
+.stat-bar-bg{flex:1;height:18px;background:var(--parch2);border-radius:9px;overflow:hidden}
+.stat-bar{height:100%;background:linear-gradient(90deg,var(--amber-lt),var(--amber));border-radius:9px;min-width:2px;transition:width .4s}
+.stat-pct{width:70px;font-size:.7rem;color:var(--fog);flex-shrink:0}
+.stat-detail{display:none;margin:.25rem 0 .5rem .5rem;padding:.4rem .55rem;background:rgba(216,168,80,.06);border-left:2px solid var(--amber-lt);border-radius:0 4px 4px 0}
+.stat-detail.open{display:block}
+.stat-detail-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem .8rem;padding:.3rem 0;border-bottom:1px solid rgba(0,0,0,.05);font-size:.72rem;cursor:pointer}
+.stat-detail-row:last-child{border-bottom:none}
+.stat-detail-row:hover{background:rgba(0,0,0,.03)}
+.stat-detail-line{font-size:.6rem;color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:.5rem 0 .2rem;border-top:1px dashed rgba(216,168,80,.35)}
+.stat-detail-line:first-child{border-top:none;padding-top:.1rem}
+.sdr-name{font-weight:600;color:var(--ink);font-family:'EB Garamond',serif;font-size:.85rem;flex:1 1 60%}
+.sdr-role{font-size:.62rem;color:var(--fog-lt);text-transform:uppercase;letter-spacing:.04em}
+.sdr-town{font-size:.7rem;color:var(--fog);flex-basis:100%}
+
+/* ══ MODAL ══ */
+.modal-backdrop{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(28,23,18,.6);z-index:200;align-items:flex-start;justify-content:center;padding:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal-backdrop.open{display:flex}
+.modal{background:#fff;border-radius:8px;width:calc(100% - 1rem);max-width:560px;margin:1rem .5rem;box-shadow:0 24px 64px rgba(0,0,0,.35);overflow:visible;align-self:flex-start}
+.modal-hd{position:sticky;top:0;z-index:2;background:var(--ink);color:var(--parch);padding:.85rem 1.1rem .65rem;display:flex;align-items:flex-start;justify-content:space-between;border-top-left-radius:8px;border-top-right-radius:8px}
+.modal-hd h2{font-family:'EB Garamond',serif;font-size:1.1rem;font-weight:400;line-height:1.2}
+.modal-hd p{font-size:.68rem;color:var(--fog-lt);margin-top:.15rem}
+.modal-close{background:none;border:none;color:var(--fog-lt);font-size:1.4rem;cursor:pointer;padding:.1rem .3rem 0 .75rem;line-height:1;flex-shrink:0}
+.modal-close:hover{color:var(--parch)}
+.modal-body{padding:1rem 1.1rem 0}
+.modal-ft{position:sticky;bottom:0;background:#fff;padding:.75rem 1.1rem;border-top:1px solid var(--parch2);display:flex;gap:.5rem;justify-content:flex-end;border-bottom-left-radius:8px;border-bottom-right-radius:8px}
+/* Cuando el backdrop está compensando manualmente el zoom de iOS con transform,
+   `position:sticky` interno se rompe (sticky se calcula contra el viewport real,
+   no contra un contenedor transformado). En ese modo bajamos sticky → relative
+   para que cabecera y pie sigan el flujo del scroll del modal. */
+.modal-backdrop.vvp-scaled .modal-hd{position:relative}
+.modal-backdrop.vvp-scaled .modal-ft{position:relative}
+.fsec{margin-bottom:1rem}
+.fsec-title{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);font-weight:700;margin-bottom:.55rem;padding-bottom:.22rem;border-bottom:1px solid var(--parch2)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
+.frow.c1{grid-template-columns:1fr}
+.frow.c3{grid-template-columns:2fr 1fr 1fr}
+.frow.c13{grid-template-columns:1fr 3fr}
+label{display:block;font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--fog);margin-bottom:.18rem}
+input[type=text],input[type=date],input[type=number],input[type=email],input[type=password],textarea,select{width:100%;padding:.38rem .5rem;border:1px solid var(--parch3);border-radius:3px;font-family:'Inter',sans-serif;font-size:.8rem;color:var(--ink);background:var(--parch);transition:border-color .12s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--amber-lt);background:#fff}
+textarea{resize:vertical;min-height:54px}
+.check-row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem}
+.check-item{display:flex;gap:.35rem;align-items:center;font-size:.75rem;color:var(--ink)}
+.check-item input{width:auto}
+
+/* dual date */
+.date-field{display:flex;flex-direction:column;gap:.2rem}
+.date-inputs{display:flex;gap:.3rem;align-items:center}
+.date-text{flex:1;padding:.38rem .5rem;border:1px solid var(--parch3);border-radius:3px;font-family:'Inter',sans-serif;font-size:.8rem;color:var(--ink);background:var(--parch);transition:border-color .12s}
+.date-text:focus{outline:none;border-color:var(--amber-lt);background:#fff}
+.date-text.err{border-color:var(--rust-lt);background:#fff8f6}
+.date-text.ok{border-color:var(--moss-lt)}
+.date-cal{width:28px;height:28px;flex-shrink:0;border:1px solid var(--parch3);border-radius:3px;background:var(--parch);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+.date-cal:hover{border-color:var(--amber-lt);background:#fff}
+.date-cal input[type=date]{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+.date-hint{font-size:.6rem;color:var(--fog-lt);line-height:1.3;min-height:.8em}
+.date-hint.err-msg{color:var(--rust-lt);font-weight:600}
+
+/* town validator */
+.town-field{position:relative}
+.town-suggest{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--parch3);border-radius:0 0 5px 5px;box-shadow:var(--shadow-lg);z-index:60;max-height:180px;overflow-y:auto;display:none}
+.town-suggest.open{display:block}
+.town-opt{padding:.4rem .6rem;font-size:.74rem;cursor:pointer;border-bottom:1px solid var(--parch2)}
+.town-opt:hover{background:var(--parch)}
+.town-opt .town-detail{font-size:.62rem;color:var(--fog-lt)}
+.town-status{font-size:.6rem;margin-top:.15rem;min-height:.8em}
+.town-status.ok{color:var(--moss-lt)}
+.town-status.checking{color:var(--fog-lt)}
+.town-status.warn{color:var(--rust-lt)}
+
+/* incongruence + range conflict banners */
+.incon-banner{margin:0 0 .9rem;padding:.6rem .8rem;background:#fff8e1;border:1px solid #f5c842;border-left:4px solid #e6a800;border-radius:5px}
+.incon-banner-title{font-size:.7rem;font-weight:700;color:#7a5500;margin-bottom:.3rem}
+.incon-item{font-size:.69rem;color:#5c4000;margin-bottom:.18rem;line-height:1.45;padding-left:.8rem;position:relative}
+.incon-item::before{content:'!';position:absolute;left:0;font-weight:700;color:var(--rust);font-family:'Inter',sans-serif}
+.conflict-banner{margin:0 0 .9rem;padding:.6rem .8rem;background:#fdf0ec;border:1px solid var(--rust-lt);border-left:4px solid var(--rust);border-radius:5px;font-size:.7rem;color:var(--rust);line-height:1.5}
+
+/* siblings section */
+.sib-list{margin-bottom:.5rem}
+.sib-item{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.4rem .6rem;background:var(--parch);border-radius:4px;margin-bottom:.3rem;font-size:.76rem;cursor:pointer}
+.sib-item:hover{background:var(--parch2)}
+.sib-item .sib-meta{font-size:.64rem;color:var(--fog)}
+.sib-del{background:none;border:none;color:var(--rust-lt);cursor:pointer;font-size:.8rem;padding:.1rem .3rem}
+.add-sib-btn{width:100%;padding:.4rem;border:1px dashed var(--amber-lt);background:transparent;color:var(--amber);border-radius:4px;font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.add-sib-btn:hover{background:rgba(150,112,14,.06)}
+
+#toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--ink);color:var(--parch);padding:.55rem 1rem;border-radius:5px;font-size:.76rem;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:opacity .25s;z-index:999;max-width:80vw}
+#toast.show{opacity:1}
+
+@media(max-width:600px){
+  .frow{grid-template-columns:1fr}
+  .frow.c3,.frow.c13{grid-template-columns:1fr 1fr}
+  #app-header h1{font-size:.95rem}
+  .stat-name{width:110px;font-size:.72rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH ══ -->
+<div id="auth-overlay" style="display:none">
+  <div class="auth-card">
+    <h2><span class="brand-mark"><svg class="brand-tree" viewBox="0 0 28 28" aria-hidden="true"><circle class="bt-c" cx="14" cy="14" r="1.6"/><line class="bt-b" x1="14" y1="14" x2="14" y2="5"/><line class="bt-b" x1="14" y1="14" x2="22.5" y2="9"/><line class="bt-b" x1="14" y1="14" x2="22.5" y2="19"/><line class="bt-b" x1="14" y1="14" x2="14" y2="23"/><line class="bt-b" x1="14" y1="14" x2="5.5" y2="19"/><line class="bt-b" x1="14" y1="14" x2="5.5" y2="9"/><circle class="bt-t" cx="14" cy="5" r="1.1"/><circle class="bt-t" cx="22.5" cy="9" r="1.1"/><circle class="bt-t" cx="22.5" cy="19" r="1.1"/><circle class="bt-t" cx="14" cy="23" r="1.1"/><circle class="bt-t" cx="5.5" cy="19" r="1.1"/><circle class="bt-t" cx="5.5" cy="9" r="1.1"/></svg></span> propancestor</h2>
+    <p>Inicia sesión para sincronizar tu árbol en la nube</p>
+    <input type="email" id="auth-email" placeholder="Correo electrónico" autocomplete="email">
+    <input type="password" id="auth-pass" placeholder="Contraseña" autocomplete="current-password">
+    <button class="auth-btn primary" onclick="authLogin()">Entrar</button>
+    <button class="auth-btn secondary" onclick="authSignup()">Crear cuenta</button>
+    <button class="auth-btn local" onclick="useLocalMode()">Usar sin cuenta (solo este dispositivo)</button>
+    <div class="auth-msg" id="auth-msg"></div>
+  </div>
+</div>
+
+<header id="app-header">
+  <h1>
+    <span class="brand-mark">
+      <svg class="brand-tree" viewBox="0 0 28 28" aria-hidden="true">
+        <circle class="bt-c" cx="14" cy="14" r="1.6"/>
+        <line class="bt-b" x1="14" y1="14" x2="14" y2="5"/>
+        <line class="bt-b" x1="14" y1="14" x2="22.5" y2="9"/>
+        <line class="bt-b" x1="14" y1="14" x2="22.5" y2="19"/>
+        <line class="bt-b" x1="14" y1="14" x2="14" y2="23"/>
+        <line class="bt-b" x1="14" y1="14" x2="5.5" y2="19"/>
+        <line class="bt-b" x1="14" y1="14" x2="5.5" y2="9"/>
+        <circle class="bt-t" cx="14" cy="5" r="1.1"/>
+        <circle class="bt-t" cx="22.5" cy="9" r="1.1"/>
+        <circle class="bt-t" cx="22.5" cy="19" r="1.1"/>
+        <circle class="bt-t" cx="14" cy="23" r="1.1"/>
+        <circle class="bt-t" cx="5.5" cy="19" r="1.1"/>
+        <circle class="bt-t" cx="5.5" cy="9" r="1.1"/>
+      </svg>
+    </span>
+    <span class="brand-name">propancestor</span>
+  </h1>
+  <div class="header-actions">
+    <div id="save-indicator" title="Guardado" style="width:8px;height:8px;border-radius:50%;background:#4a8a5c;opacity:0;transition:opacity .4s;flex-shrink:0"></div>
+    <button class="hbtn-icon" id="settings-btn" onclick="openSettings()" aria-label="Configuración">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+    <input type="file" id="import-ged" accept=".ged,.gedcom" style="display:none" onchange="handleGedImport(event)">
+  </div>
+</header>
+
+<!-- ══ MODAL CONFIGURACIÓN ══ -->
+<div class="modal-backdrop" id="settings-bd">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-hd">
+      <div>
+        <h2>Configuración</h2>
+        <p id="settings-sub">Importar, exportar y sesión</p>
+      </div>
+      <button class="modal-close" onclick="closeSettings()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;display:block;margin:0 auto"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="settings-body">
+      <div class="fsec">
+        <div class="fsec-title"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6"/></svg> Cuenta</div>
+        <div id="settings-account" style="font-size:.78rem;color:var(--ink);padding:.3rem 0 .6rem;line-height:1.4"></div>
+        <button class="hbtn hbtn-ghost" id="settings-logout-btn" style="display:none;width:100%" onclick="authLogout()">Salir de la cuenta</button>
+      </div>
+      <div class="fsec">
+        <div class="fsec-title"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13v6a2 2 0 002 2h14a2 2 0 002-2v-6"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Importar</div>
+        <button class="hbtn hbtn-ghost" style="width:100%;margin-bottom:.4rem" onclick="closeSettings();importJSON()">⬆ Importar desde JSON</button>
+        <button class="hbtn hbtn-ghost" style="width:100%" onclick="closeSettings();importGEDCOMfile()">⬆ Importar desde GEDCOM</button>
+      </div>
+      <div class="fsec">
+        <div class="fsec-title"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13v6a2 2 0 002 2h14a2 2 0 002-2v-6"/><polyline points="7 8 12 3 17 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Exportar</div>
+        <button class="hbtn hbtn-amber" style="width:100%;margin-bottom:.4rem" onclick="closeSettings();exportJSON()">⬇ Exportar a JSON</button>
+        <button class="hbtn hbtn-rust" style="width:100%" onclick="closeSettings();exportGEDCOM()">⬇ Exportar a GEDCOM</button>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="hbtn hbtn-ghost" onclick="closeSettings()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL GUÍA SOLICITAR CERTIFICADO ══ -->
+<div class="modal-backdrop" id="cert-help-bd">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-hd">
+      <div>
+        <h2>Solicitar certificado</h2>
+        <p>Guía paso a paso de la sede del Ministerio de Justicia</p>
+      </div>
+      <button class="modal-close" onclick="closeCertHelp()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;display:block;margin:0 auto"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="cert-help-body">
+      <p style="font-size:.78rem;color:var(--ink);line-height:1.5;margin:0 0 .7rem">El enlace lleva a la <strong>Sede Electrónica del Ministerio de Justicia</strong>. Solo sirve para certificados del Registro Civil, es decir, nacimientos a partir del <strong>1 de enero de 1871</strong>. Para anteriores, dirígete al archivo diocesano o a la parroquia: cada diócesis funciona distinto y no hay un sistema unificado.</p>
+      <p style="font-size:.74rem;color:var(--fog);line-height:1.5;margin:0 0 .9rem;font-style:italic">El registro puede tardar desde 1 día hasta más de un mes en responder.</p>
+
+      <ol class="cert-steps">
+        <li>
+          <div class="cert-step-h">Datos generales</div>
+          <ul>
+            <li>Persona que solicita: <em>Tercero, es para otra persona</em></li>
+            <li>Inscrito fallecido: <em>Sí</em></li>
+            <li>En calidad de: <em>Otros</em></li>
+            <li>Marca <em>Me opongo a la consulta de identidad de la DGP</em> (necesario al usar genealogía como motivo)</li>
+          </ul>
+        </li>
+        <li>
+          <div class="cert-step-h">Datos del certificado</div>
+          <ul>
+            <li>Tipo certificado: <em>Certificado Literal de Nacimiento</em></li>
+            <li>Destinatario: <em>Admin. Pública</em></li>
+            <li>Motivo: <em>Otros</em></li>
+            <li>Finalidad: <em>Investigación de genealogía</em></li>
+            <li>Observaciones: explica la relación con la persona y el rango estimado. Ej.: «Era el padre de la madre de mi padre. Nació entre el 30/08/1898 y 29/08/1899, según el certificado de su hija»</li>
+          </ul>
+        </li>
+        <li>
+          <div class="cert-step-h">Datos del nacimiento</div>
+          <ul>
+            <li>Fecha del nacimiento: pon la fecha más antigua del rango estimado</li>
+          </ul>
+        </li>
+        <li>
+          <div class="cert-step-h">Lugar de inscripción</div>
+          <ul>
+            <li>País: <em>España</em></li>
+            <li>Provincia: la del municipio</li>
+            <li>Registro Civil: oficina colaboradora del municipio</li>
+          </ul>
+        </li>
+        <li>
+          <div class="cert-step-h">Documentación adjunta</div>
+          <ul>
+            <li>Adjunta tu DNI en PDF para acreditar interés legítimo</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+    <div class="modal-ft">
+      <button class="hbtn hbtn-ghost" onclick="closeCertHelp()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<nav id="view-tabs">
+  <button class="vtab active" data-view="fan" onclick="switchView('fan')"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20a9 9 0 0118 0"/><path d="M3 20h18"/><line x1="9" y1="20" x2="6.5" y2="12"/><line x1="15" y1="20" x2="17.5" y2="12"/><line x1="12" y1="20" x2="12" y2="11"/></svg> Abanico</button>
+  <button class="vtab" data-view="search" onclick="switchView('search')"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="18" rx="2"/><rect x="9" y="2.5" width="6" height="3.5" rx="1" fill="currentColor" stroke="none"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="14.5" x2="15" y2="14.5"/><line x1="9" y1="18" x2="13" y2="18"/></svg> Actas a buscar</button>
+  <button class="vtab" data-view="stats" onclick="switchView('stats')"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="5"/><line x1="18" y1="20" x2="18" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></svg> Apellidos</button>
+</nav>
+
+<div id="searchbox-wrap">
+  <input type="text" id="searchbox" placeholder="Buscar persona por nombre o apellido..." oninput="runSearch()">
+  <div id="search-results"></div>
+</div>
+
+<!-- ══ VISTA ABANICO ══ -->
+<div id="view-fan">
+  <div id="fan-controls">
+    <label>Generaciones:</label>
+    <select id="fan-depth" onchange="renderFan()">
+      <option value="4">4</option>
+      <option value="5" selected>5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+    </select>
+    <label style="margin-left:.6rem">Color:</label>
+    <select id="fan-color-mode" onchange="setFanColorMode(this.value)">
+      <option value="branch" selected>Por estirpe</option>
+      <option value="status">Por estado del acta</option>
+      <option value="town">Por pueblo de nacimiento</option>
+    </select>
+    <span style="font-size:.62rem;color:var(--fog-lt)">Toca un sector para abrir el perfil</span>
+  </div>
+  <div id="fan-legend" style="display:none"></div>
+  <div id="fan-wrap"><div id="fan-svg-holder"></div></div>
+</div>
+
+<!-- ══ VISTA ACTAS A BUSCAR ══ -->
+<div id="view-search" style="display:none">
+  <div class="panel-wrap">
+    <div class="spanel">
+      <div class="spanel-hd">
+        <div>
+          <h3><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="18" rx="2"/><rect x="9" y="2.5" width="6" height="3.5" rx="1" fill="currentColor" stroke="none"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="14.5" x2="15" y2="14.5"/><line x1="9" y1="18" x2="13" y2="18"/></svg> Actas a buscar</h3>
+          <p>Perfiles pendientes de certificado de nacimiento o bautismo</p>
+        </div>
+        <button class="info-btn" onclick="toggleInfoPop()">i</button>
+      </div>
+      <div class="info-pop" id="info-pop">
+        <strong>¿Cuándo aparece un perfil aquí?</strong><br>
+        Un perfil es <strong>apto para búsqueda</strong> cuando cumple todo esto:<br>
+        • Está desbloqueado (se conoce por el acta de su hijo/a u otra fuente)<br>
+        • Tiene un <strong>rango estimado de nacimiento</strong> (calculado de la edad que constaba en el acta del hijo, o triangulado con actas de hermanos)<br>
+        • Tiene un <strong>pueblo</strong> donde buscar<br>
+        • Aún <strong>NO tiene fecha exacta</strong> de nacimiento (la fecha exacta marca el acta como obtenida)<br><br>
+        Si borras un dato necesario (p.ej. la edad del padre en el acta del hijo), el perfil deja de ser apto y desaparece de esta lista.<br><br>
+        <strong>Prioridad:</strong> <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#7fae8c;vertical-align:-1px"></span> Registro civil → si se marca «negativa en registro», pasa a <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#d9bc6e;vertical-align:-1px"></span> Parroquia → si también hay negativa en parroquia, pasa a <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#b85535;vertical-align:-1px"></span> Agotado (otras vías: padrones, archivos diocesanos, etc.)
+      </div>
+      <div class="panel-filters" id="search-filters"></div>
+      <div class="cert-cta">
+        <button class="cert-cta-btn" onclick="solicitarCertificado()"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="14 3 14 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>Solicitar certificado</button>
+        <button class="cert-cta-info" onclick="showCertificadoInfo()" aria-label="Información">i</button>
+      </div>
+      <div id="spanel-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VISTA STATS ══ -->
+<div id="view-stats" style="display:none">
+  <div class="panel-wrap">
+    <div class="spanel">
+      <div class="spanel-hd"><div>
+        <h3><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="5"/><line x1="18" y1="20" x2="18" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></svg> Apellidos predominantes</h3>
+        <p>Frecuencia de apellidos entre tus antepasados directos documentados</p>
+      </div></div>
+      <div class="stats-list" id="stats-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL PERFIL ══ -->
+<div class="modal-backdrop" id="modal-bd">
+  <div class="modal">
+    <div class="modal-hd">
+      <div><h2 id="modal-title"></h2><p id="modal-sub"></p></div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;display:block;margin:0 auto"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-ft">
+      <button class="hbtn hbtn-ghost" style="color:var(--fog)" onclick="closeModal()">Cancelar</button>
+      <button class="hbtn hbtn-amber" onclick="saveData()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL HERMANO ══ -->
+<div class="modal-backdrop" id="sib-bd">
+  <div class="modal">
+    <div class="modal-hd">
+      <div><h2 id="sib-title">Hermano/a</h2><p id="sib-sub"></p></div>
+      <button class="modal-close" onclick="closeSibModal()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;display:block;margin:0 auto"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="sib-body"></div>
+    <div class="modal-ft">
+      <button class="hbtn hbtn-ghost" style="color:var(--fog)" onclick="closeSibModal()">Cancelar</button>
+      <button class="hbtn hbtn-amber" onclick="saveSibData()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL SELECCIÓN RAÍZ GEDCOM ══ -->
+<div class="modal-backdrop" id="ged-bd">
+  <div class="modal">
+    <div class="modal-hd">
+      <div><h2>Importar GEDCOM</h2><p>Selecciona quién eres tú (la persona raíz del árbol)</p></div>
+      <button class="modal-close" onclick="closeGedModal()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;display:block;margin:0 auto"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="incon-banner" style="margin-top:.5rem">
+        <div class="incon-banner-title"><svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:.2rem"><path d="M12 3l10 18H2L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17.5" r=".7" fill="currentColor" stroke="none"/></svg> Apellidos concatenados</div>
+        <div class="incon-item">El formato GEDCOM internacional trae un solo campo de apellido. Tras importar, los apellidos quedarán juntos en «Primer apellido» y deberás separarlos manualmente en cada perfil.</div>
+      </div>
+      <input type="text" id="ged-search" placeholder="Buscar por nombre..." oninput="filterGedList()" style="margin-bottom:.5rem">
+      <div id="ged-list" style="max-height:300px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script>
+window.onerror = function(msg, src, line, col, err){
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:60px;left:1rem;right:1rem;background:#c0392b;color:#fff;padding:.75rem 1rem;border-radius:6px;font-family:monospace;font-size:.75rem;z-index:9999;white-space:pre-wrap;';
+  d.textContent = 'JS Error: ' + msg + '\nLine: ' + line + ':' + col;
+  document.body.appendChild(d);
+  return false;
+};
+
+// ═══════════════════════════════════════════════════
+// CONFIGURACIÓN SUPABASE — rellena con tus credenciales
+// Las encuentras en: Supabase Dashboard → Settings → API
+// ═══════════════════════════════════════════════════
+var SUPABASE_URL = 'TU_SUPABASE_URL_AQUI';
+var SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY_AQUI';
+
+var sb = null;          // cliente supabase
+var currentUser = null; // usuario logueado
+var treeId = null;      // id del árbol del usuario
+var localMode = false;  // true si trabaja sin cuenta
+
+// ═══════════════════════════════════════════════════
+// MODELO DE DATOS
+// nodes: { lineageId → node }   sibs: { lineageId → [siblingObj,...] }
+// ═══════════════════════════════════════════════════
+var nodes = {};
+var sibs = {};
+
+// Nomenclatura oficial española de ascendientes.
+// gen interna: 0=probando, 1=padres, 2=abuelos, 3=bisabuelos, 4=tatarabuelos,
+// 5=trastatarabuelos, 6=pentabuelos, 7=hexabuelos, 8=heptabuelos,
+// 9=octabuelos, 10=eneabuelos, 11=decabuelos
+var GEN_TERMS = {
+  1:['Padre','Madre'], 2:['Abuelo','Abuela'], 3:['Bisabuelo','Bisabuela'],
+  4:['Tatarabuelo','Tatarabuela'], 5:['Trastatarabuelo','Trastatarabuela'],
+  6:['Pentabuelo','Pentabuela'], 7:['Hexabuelo','Hexabuela'],
+  8:['Heptabuelo','Heptabuela'], 9:['Octabuelo','Octabuela'],
+  10:['Eneabuelo','Eneabuela'], 11:['Decabuelo','Decabuela']
+};
+
+function genLabel(g){
+  if(g===0) return 'Tú';
+  if(GEN_TERMS[g]) return GEN_TERMS[g][0] + 's';
+  return 'Generación ' + g;
+}
+
+function pathOf(id){
+  if(id==='0') return [];
+  var p=[]; var c=id;
+  while(c!=='0'){ p.unshift(c.slice(-1)); c=c.slice(0,-1); }
+  return p;
+}
+
+function roleOf(id){
+  if(id==='0') return 'Persona principal';
+  var path = pathOf(id);
+  var g = path.length;
+  var last = path[g-1];
+  var isMale = last==='p';
+  var term = GEN_TERMS[g] ? GEN_TERMS[g][isMale?0:1] : ('Ascendiente G'+g);
+  if(g===1) return term;
+  if(g===2){
+    var branch = path[0]==='p' ? (isMale?' paterno':' paterna') : (isMale?' materno':' materna');
+    return term + branch;
+  }
+  var sides = path.map(function(s){return s==='p'?'P':'M';}).join('-');
+  return term + ' (' + sides + ')';
+}
+
+function defaultSex(id){
+  if(id==='0') return '';
+  return id.slice(-1)==='p' ? 'V' : 'M';
+}
+
+function makeNode(id, parentId, unlocked){
+  var gen = pathOf(id).length;
+  return {
+    id:id, gen:gen, role:roleOf(id), parent:parentId,
+    side: id==='0'?null:id.slice(-1), unlocked:!!unlocked, sex:defaultSex(id),
+    firstName:'', surname1:'', surname2:'', alias:'', officialName:'',
+    birthDateExact:'', birthRangeFrom:'', birthRangeTo:'',
+    birthPlace:'', baptismDate:'', baptismPlace:'',
+    deathDate:'', deathPlace:'', deathRangeTo:'',  // defunción (rellena en su propio perfil)
+    ageAtChildBirth:null, rangeConflict:false,
+    negRegistro:false, negParroquia:false,
+    fatherFirstName:'', fatherSurname1:'', fatherSurname2:'', fatherAge:null, fatherOrigin:'', fatherDeceased:false,
+    motherFirstName:'', motherSurname1:'', motherSurname2:'', motherAge:null, motherOrigin:'', motherDeceased:false,
+    pgfFirst:'', pgfSur1:'', pgfSur2:'', pgfAge:null, pgfOrigin:'', pgfDeceased:false,
+    pgmFirst:'', pgmSur1:'', pgmSur2:'', pgmAge:null, pgmOrigin:'', pgmDeceased:false,
+    mgfFirst:'', mgfSur1:'', mgfSur2:'', mgfAge:null, mgfOrigin:'', mgfDeceased:false,
+    mgmFirst:'', mgmSur1:'', mgmSur2:'', mgmAge:null, mgmOrigin:'', mgmDeceased:false,
+    certRequestedAt:null,  // timestamp ISO de cuándo se marcó "acta solicitada"
+    notes:''
+  };
+}
+
+function makeSibling(){
+  return {
+    firstName:'', surname1:'', surname2:'', alias:'', officialName:'', sex:'',
+    birthDateExact:'', birthRangeFrom:'', birthRangeTo:'',
+    birthPlace:'', baptismDate:'', baptismPlace:'',
+    deathDate:'', deathPlace:'', deathRangeTo:'',
+    negRegistro:false, negParroquia:false,
+    fatherFirstName:'', fatherSurname1:'', fatherSurname2:'', fatherAge:null, fatherOrigin:'', fatherDeceased:false,
+    motherFirstName:'', motherSurname1:'', motherSurname2:'', motherAge:null, motherOrigin:'', motherDeceased:false,
+    pgfFirst:'', pgfSur1:'', pgfSur2:'', pgfAge:null, pgfOrigin:'', pgfDeceased:false,
+    pgmFirst:'', pgmSur1:'', pgmSur2:'', pgmAge:null, pgmOrigin:'', pgmDeceased:false,
+    mgfFirst:'', mgfSur1:'', mgfSur2:'', mgfAge:null, mgfOrigin:'', mgfDeceased:false,
+    mgmFirst:'', mgmSur1:'', mgmSur2:'', mgmAge:null, mgmOrigin:'', mgmDeceased:false,
+    notes:''
+  };
+}
+
+nodes['0'] = makeNode('0', null, true);
+
+function ensureChildren(parentId){
+  var fId = parentId+'p', mId = parentId+'m';
+  if(!nodes[fId]) nodes[fId] = makeNode(fId, parentId, false);
+  if(!nodes[mId]) nodes[mId] = makeNode(mId, parentId, false);
+}
+
+function fullName(n){
+  if(!n) return '';
+  return [n.firstName,n.surname1,n.surname2].filter(Boolean).join(' ');
+}
+function displayName(n){
+  var nm = fullName(n);
+  return nm || '';
+}
+// Para el resumen de actas a buscar y el desplegable de apellidos: el nombre
+// de pila prioriza el oficial del acta, luego el de pila conocido, luego el alias.
+function displayGivenName(n){
+  if(!n) return '';
+  return (n.officialName||'').trim() || (n.firstName||'').trim() || (n.alias||'').trim();
+}
+function displayFullName(n){
+  if(!n) return '';
+  var gn = displayGivenName(n);
+  return [gn, n.surname1, n.surname2].filter(Boolean).join(' ');
+}
+
+// ═══════════════════════════════════════════════════
+// FECHAS — precisión día/mes
+// ═══════════════════════════════════════════════════
+function isoToDisplay(iso){
+  if(!iso) return '';
+  var p = iso.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+function displayToIso(txt){
+  if(!txt) return '';
+  var m = txt.trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{3,4})$/);
+  if(!m) return null;
+  var d=parseInt(m[1],10), mo=parseInt(m[2],10), y=parseInt(m[3],10);
+  if(mo<1||mo>12||d<1||d>31||y<1||y>2100) return null;
+  return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+function fmtES(iso){
+  if(!iso) return '';
+  var p = iso.split('-');
+  var ms=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return parseInt(p[2],10)+' de '+ms[parseInt(p[1],10)-1]+' de '+p[0];
+}
+function fmtShort(iso){
+  if(!iso) return '';
+  var p = iso.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+
+// Suma años a una fecha ISO; deltaDays opcional
+function isoAdd(iso, years, deltaDays){
+  var p = iso.split('-');
+  var dt = new Date(Date.UTC(parseInt(p[0],10), parseInt(p[1],10)-1, parseInt(p[2],10)));
+  dt.setUTCFullYear(dt.getUTCFullYear()+years);
+  if(deltaDays) dt.setUTCDate(dt.getUTCDate()+deltaDays);
+  var y = dt.getUTCFullYear(), mo = dt.getUTCMonth()+1, d = dt.getUTCDate();
+  return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+
+// Si en la fecha childISO el progenitor tenía A años cumplidos,
+// nació entre (childISO − (A+1) años + 1 día) y (childISO − A años).
+function rangeFromAge(childISO, age){
+  if(!childISO || age==null) return null;
+  return {
+    from: isoAdd(childISO, -(age+1), 1),
+    to:   isoAdd(childISO, -age, 0)
+  };
+}
+
+// Compara fechas ISO lexicográficamente (válido en formato YYYY-MM-DD)
+function isoMax(a,b){ return a>b?a:b; }
+function isoMin(a,b){ return a<b?a:b; }
+
+// ═══════════════════════════════════════════════════
+// TRIANGULACIÓN — evidencias para el rango de un progenitor
+// Fuentes: acta del hijo directo + actas de hermanos del hijo
+// Si los rangos no se cruzan (edades mal declaradas, frecuente
+// antiguamente) → rangeConflict y se usa la envolvente.
+// ═══════════════════════════════════════════════════
+function gatherEvidence(childId, side){
+  // side: 'p' (padre) o 'm' (madre). Devuelve [{from,to,src}]
+  var ev = [];
+  var c = nodes[childId];
+  if(!c) return ev;
+  var ageField = side==='p' ? 'fatherAge' : 'motherAge';
+
+  // referencia de fecha del hijo: exacta, o su propio rango
+  if(c[ageField]!=null){
+    if(c.birthDateExact){
+      var r = rangeFromAge(c.birthDateExact, c[ageField]);
+      if(r) ev.push({from:r.from, to:r.to, src:'acta de '+(displayName(c)||c.role)});
+    } else if(c.birthRangeFrom && c.birthRangeTo){
+      // rango difuso: ampliar usando ambos extremos
+      var r1 = rangeFromAge(c.birthRangeFrom, c[ageField]);
+      var r2 = rangeFromAge(c.birthRangeTo, c[ageField]);
+      if(r1&&r2) ev.push({from:isoMin(r1.from,r2.from), to:isoMax(r1.to,r2.to), src:'rango de '+(displayName(c)||c.role)});
+    }
+  }
+
+  // hermanos del hijo: sus actas citan a los mismos padres
+  var list = sibs[childId] || [];
+  for(var i=0;i<list.length;i++){
+    var s = list[i];
+    if(s[ageField]!=null && s.birthDateExact){
+      var rs = rangeFromAge(s.birthDateExact, s[ageField]);
+      if(rs) ev.push({from:rs.from, to:rs.to, src:'acta de '+(s.firstName||'hermano/a')});
+    }
+  }
+  return ev;
+}
+
+function triangulate(childId, side){
+  var ev = gatherEvidence(childId, side);
+  if(!ev.length) return null;
+  // intersección
+  var iFrom = ev[0].from, iTo = ev[0].to;
+  var uFrom = ev[0].from, uTo = ev[0].to;
+  for(var i=1;i<ev.length;i++){
+    iFrom = isoMax(iFrom, ev[i].from);
+    iTo   = isoMin(iTo, ev[i].to);
+    uFrom = isoMin(uFrom, ev[i].from);
+    uTo   = isoMax(uTo, ev[i].to);
+  }
+  if(iFrom <= iTo){
+    return {from:iFrom, to:iTo, conflict:false, sources:ev.length};
+  }
+  // rangos inconexos: envolvente + flag
+  return {from:uFrom, to:uTo, conflict:true, sources:ev.length};
+}
+
+// ═══════════════════════════════════════════════════
+// APELLIDOS — sistema español + incongruencias + NORMALIZACIÓN
+// ═══════════════════════════════════════════════════
+// normalizeSurname: clave canónica para comparar dos apellidos como "iguales"
+//  - "Martinez" ≡ "Martínez"
+//  - "Diaz-Maroto" ≡ "Díaz Maroto" ≡ "Díaz-Maroto"
+//  - "de Verdugo" ≡ "y Verdugo" ≡ "Verdugo"
+// Mantenemos la forma "preferida" (la que el usuario escribió con tildes/guiones)
+// para mostrarla en pantalla.
+function stripDiacritics(s){
+  if(!s) return '';
+  // Algunos navegadores antiguos no soportan normalize; usamos un fallback manual
+  if(typeof s.normalize === 'function'){
+    try { return s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); } catch(e){}
+  }
+  return s.replace(/[áàäâ]/g,'a').replace(/[ÁÀÄÂ]/g,'A')
+          .replace(/[éèëê]/g,'e').replace(/[ÉÈËÊ]/g,'E')
+          .replace(/[íìïî]/g,'i').replace(/[ÍÌÏÎ]/g,'I')
+          .replace(/[óòöô]/g,'o').replace(/[ÓÒÖÔ]/g,'O')
+          .replace(/[úùüû]/g,'u').replace(/[ÚÙÜÛ]/g,'U')
+          .replace(/ñ/g,'n').replace(/Ñ/g,'N')
+          .replace(/ç/g,'c').replace(/Ç/g,'C');
+}
+function normalizeSurname(s){
+  if(!s) return '';
+  var t = stripDiacritics(String(s).trim().toLowerCase());
+  // quitar prefijos opcionales: "de ", "y ", "del ", "de la ", "y de "
+  t = t.replace(/^(de\s+la\s+|de\s+los\s+|de\s+las\s+|del\s+|de\s+|y\s+de\s+|y\s+)/, '');
+  // normalizar guiones/espacios en apellidos compuestos: "diaz-maroto" ≡ "diaz maroto"
+  // Unificamos a guion sin espacios.
+  t = t.replace(/\s*-\s*/g, '-').replace(/\s+/g, '-');
+  return t;
+}
+function surnamesMatch(a, b){
+  // null/'' nunca debe contar como match con otra cosa
+  var na = normalizeSurname(a), nb = normalizeSurname(b);
+  return na && nb && na === nb;
+}
+// Dado un conjunto de variantes del mismo apellido (todas con misma clave
+// canónica), devuelve la "más rica" para mostrar (más tildes y guiones).
+function preferredSurnameForm(variants){
+  var best = '', bestScore = -1;
+  for(var i=0; i<variants.length; i++){
+    var v = (variants[i]||'').trim();
+    if(!v) continue;
+    var score = 0;
+    score += (v.match(/[áéíóúÁÉÍÓÚñÑ]/g)||[]).length * 5;   // diacríticos cuentan mucho
+    score += (v.match(/-/g)||[]).length * 3;                // guion compuesto
+    score += (v.match(/^(de |y |del |de la )/i)?1:0);       // partículas
+    score += v.length * 0.1;
+    if(score > bestScore){ bestScore = score; best = v; }
+  }
+  return best || (variants[0]||'');
+}
+
+function inferSurnamesFromChild(childNode, fatherNode, motherNode){
+  if(childNode.surname1 && !fatherNode.surname1) fatherNode.surname1 = childNode.surname1;
+  if(childNode.surname2 && !motherNode.surname1) motherNode.surname1 = childNode.surname2;
+  // Si el padre/madre ya tenía un apellido y ahora el hijo trae una variante
+  // ortográfica MÁS RICA del mismo, la promovemos.
+  if(childNode.surname1 && fatherNode.surname1 && surnamesMatch(childNode.surname1, fatherNode.surname1)){
+    fatherNode.surname1 = preferredSurnameForm([fatherNode.surname1, childNode.surname1]);
+  }
+  if(childNode.surname2 && motherNode.surname1 && surnamesMatch(childNode.surname2, motherNode.surname1)){
+    motherNode.surname1 = preferredSurnameForm([motherNode.surname1, childNode.surname2]);
+  }
+}
+
+function checkSurnameIncongruences(nodeId){
+  var n = nodes[nodeId];
+  var warnings = [];
+  var fn = nodes[nodeId+'p'], mn = nodes[nodeId+'m'];
+  if(n.surname1 && fn && fn.surname1 && !surnamesMatch(n.surname1, fn.surname1))
+    warnings.push('El 1° Apellido de esta persona («'+n.surname1+'») no coincide con el 1° Apellido de su padre («'+fn.surname1+'»).');
+  if(n.surname2 && mn && mn.surname1 && !surnamesMatch(n.surname2, mn.surname1))
+    warnings.push('El 2° Apellido de esta persona («'+n.surname2+'») no coincide con el 1° Apellido de su madre («'+mn.surname1+'»).');
+  if(nodeId!=='0'){
+    var childId = nodeId.slice(0,-1);
+    var child = nodes[childId];
+    if(child){
+      if(nodeId.slice(-1)==='p' && child.surname1 && n.surname1 && !surnamesMatch(child.surname1, n.surname1))
+        warnings.push('El 1° Apellido de su hijo/a («'+child.surname1+'») no coincide con su propio 1° Apellido («'+n.surname1+'»).');
+      if(nodeId.slice(-1)==='m' && child.surname2 && n.surname1 && !surnamesMatch(child.surname2, n.surname1))
+        warnings.push('El 2° Apellido de su hijo/a («'+child.surname2+'») no coincide con su 1° Apellido («'+n.surname1+'»).');
+    }
+  }
+  return warnings;
+}
+
+// ═══════════════════════════════════════════════════
+// PROPAGACIÓN
+// ═══════════════════════════════════════════════════
+function propagate(nodeId){
+  var p = nodes[nodeId];
+  ensureChildren(nodeId);
+  var fn = nodes[nodeId+'p'], mn = nodes[nodeId+'m'];
+
+  if(p.fatherFirstName) fn.firstName = p.fatherFirstName;
+  if(p.fatherSurname1)  fn.surname1  = p.fatherSurname1;
+  if(p.fatherSurname2)  fn.surname2  = p.fatherSurname2;
+  // birthPlace del padre: respetamos el valor del PERFIL si ya existe
+  // (es la fuente de verdad); solo lo rellenamos si está vacío. La dirección
+  // contraria (perfil → acta del hijo) sí sobrescribe — ver bloque "HACIA
+  // ABAJO" al final de la función.
+  if(p.fatherOrigin)    fn.birthPlace= fn.birthPlace || p.fatherOrigin;
+
+  if(p.motherFirstName) mn.firstName = p.motherFirstName;
+  if(p.motherSurname1)  mn.surname1  = p.motherSurname1;
+  if(p.motherSurname2)  mn.surname2  = p.motherSurname2;
+  if(p.motherOrigin)    mn.birthPlace= mn.birthPlace || p.motherOrigin;
+
+  inferSurnamesFromChild(p, fn, mn);
+
+  // Triangular rangos (acta del hijo + hermanos)
+  var sides = ['p','m'];
+  for(var i=0;i<2;i++){
+    var side = sides[i];
+    var target = side==='p'?fn:mn;
+    if(target.birthDateExact){ target.rangeConflict=false; continue; }
+    var t = triangulate(nodeId, side);
+    if(t){
+      target.birthRangeFrom = t.from;
+      target.birthRangeTo = t.to;
+      target.rangeConflict = t.conflict;
+      target.ageAtChildBirth = side==='p'?p.fatherAge:p.motherAge;
+    } else {
+      // sin evidencia: solo limpiar si antes había evidencia derivada (ageAtChildBirth set)
+      // así no borramos rangos puestos a mano o cargados de JSON
+      if(target.ageAtChildBirth != null){
+        target.birthRangeFrom = '';
+        target.birthRangeTo = '';
+        target.rangeConflict = false;
+        target.ageAtChildBirth = null;
+      }
+    }
+  }
+
+  // abuelos citados en el acta → nodos abuelos (nietos del nodo)
+  ensureChildren(nodeId+'p'); ensureChildren(nodeId+'m');
+  var map = [
+    ['pgf', nodeId+'pp'], ['pgm', nodeId+'pm'],
+    ['mgf', nodeId+'mp'], ['mgm', nodeId+'mm']
+  ];
+  for(var j=0;j<map.length;j++){
+    var pref = map[j][0], gid = map[j][1];
+    var g = nodes[gid];
+    if(!g) continue;
+    if(p[pref+'First']  && !g.firstName)  g.firstName  = p[pref+'First'];
+    if(p[pref+'Sur1']   && !g.surname1)   g.surname1   = p[pref+'Sur1'];
+    if(p[pref+'Sur2']   && !g.surname2)   g.surname2   = p[pref+'Sur2'];
+    if(p[pref+'Origin'] && !g.birthPlace) g.birthPlace = p[pref+'Origin'];
+    if((p[pref+'First']||p[pref+'Sur1']||p[pref+'Origin']) && !g.unlocked) g.unlocked = true;
+
+    // Triangulación adicional para el abuelo: si tenemos pgfAge en el acta
+    // del nieto y/o en actas de hermanos del nieto, podemos acotar el rango
+    // de nacimiento del abuelo. Solo si el abuelo aún no tiene fecha exacta
+    // ni un rango más fino calculado desde su propio hijo (el padre).
+    if(!g.birthDateExact){
+      var gEv = [];
+      function addEv(refIso1, refIso2, age, srcLabel){
+        if(age==null || !refIso1 || !refIso2) return;
+        var rA = rangeFromAge(refIso1, age);
+        var rB = rangeFromAge(refIso2, age);
+        if(rA && rB) gEv.push({from:isoMin(rA.from,rB.from), to:isoMax(rA.to,rB.to), src:srcLabel});
+      }
+      // edad del abuelo declarada en el acta del nieto
+      if(p[pref+'Age']!=null){
+        addEv(p.birthDateExact||p.birthRangeFrom, p.birthDateExact||p.birthRangeTo,
+              p[pref+'Age'], 'acta de '+(displayName(p)||p.role));
+      }
+      // edad del abuelo declarada en actas de hermanos del nieto
+      var sibList = sibs[nodeId] || [];
+      for(var si=0; si<sibList.length; si++){
+        var sb = sibList[si];
+        if(sb[pref+'Age']!=null && sb.birthDateExact){
+          addEv(sb.birthDateExact, sb.birthDateExact, sb[pref+'Age'], 'acta de hermano/a '+(sb.firstName||''));
+        }
+      }
+      if(gEv.length && !g.birthRangeFrom){
+        // intersección, sin pisar evidencia del lado del hijo (padre del nieto)
+        var iF=gEv[0].from, iT=gEv[0].to, uF=gEv[0].from, uT=gEv[0].to;
+        for(var ei=1; ei<gEv.length; ei++){
+          iF=isoMax(iF,gEv[ei].from); iT=isoMin(iT,gEv[ei].to);
+          uF=isoMin(uF,gEv[ei].from); uT=isoMax(uT,gEv[ei].to);
+        }
+        if(iF<=iT){ g.birthRangeFrom=iF; g.birthRangeTo=iT; g.rangeConflict=false; }
+        else { g.birthRangeFrom=uF; g.birthRangeTo=uT; g.rangeConflict=true; }
+      }
+    }
+  }
+
+  // Además, rellenar los campos "padre/madre de…" del nodo padre y madre
+  // para que cuando se abra la ficha del padre/madre, sus formularios ya
+  // muestren los apellidos, edad y origen de los abuelos.
+  // pgf/pgm en p son los padres del padre (fn) → fn.fatherX y fn.motherX
+  // mgf/mgm en p son los padres de la madre (mn) → mn.fatherX y mn.motherX
+  // Mismo criterio: respetamos los valores del PERFIL del padre intermedio
+  // si ya existen — la propagación HACIA ABAJO desde el abuelo sí sobrescribe.
+  if(p.pgfFirst  && !fn.fatherFirstName) fn.fatherFirstName = p.pgfFirst;
+  if(p.pgfSur1   && !fn.fatherSurname1)  fn.fatherSurname1  = p.pgfSur1;
+  if(p.pgfSur2   && !fn.fatherSurname2)  fn.fatherSurname2  = p.pgfSur2;
+  if(p.pgfOrigin && !fn.fatherOrigin)    fn.fatherOrigin    = p.pgfOrigin;
+  if(p.pgmFirst  && !fn.motherFirstName) fn.motherFirstName = p.pgmFirst;
+  if(p.pgmSur1   && !fn.motherSurname1)  fn.motherSurname1  = p.pgmSur1;
+  if(p.pgmSur2   && !fn.motherSurname2)  fn.motherSurname2  = p.pgmSur2;
+  if(p.pgmOrigin && !fn.motherOrigin)    fn.motherOrigin    = p.pgmOrigin;
+
+  if(p.mgfFirst  && !mn.fatherFirstName) mn.fatherFirstName = p.mgfFirst;
+  if(p.mgfSur1   && !mn.fatherSurname1)  mn.fatherSurname1  = p.mgfSur1;
+  if(p.mgfSur2   && !mn.fatherSurname2)  mn.fatherSurname2  = p.mgfSur2;
+  if(p.mgfOrigin && !mn.fatherOrigin)    mn.fatherOrigin    = p.mgfOrigin;
+  if(p.mgmFirst  && !mn.motherFirstName) mn.motherFirstName = p.mgmFirst;
+  if(p.mgmSur1   && !mn.motherSurname1)  mn.motherSurname1  = p.mgmSur1;
+  if(p.mgmSur2   && !mn.motherSurname2)  mn.motherSurname2  = p.mgmSur2;
+  if(p.mgmOrigin && !mn.motherOrigin)    mn.motherOrigin    = p.mgmOrigin;
+
+  // DIFUNTO al nacimiento del hijo/a → cota superior para fecha de defunción.
+  // Si el acta del hijo dice "padre difunto", entonces el padre murió ANTES de
+  // la fecha del hijo. Tomamos la fecha de referencia más estricta posible:
+  // birthDateExact si la hay, en su defecto birthRangeFrom (cota más antigua).
+  function applyDeceasedHint(targetNode, deceased){
+    if(!deceased) return;
+    var ref = p.birthDateExact || p.birthRangeFrom;
+    if(!ref) return;
+    // Si targetNode ya tiene una fecha exacta de defunción, no la tocamos.
+    if(targetNode.deathDate) return;
+    // Mantén el límite más restrictivo (la fecha más temprana).
+    if(!targetNode.deathRangeTo || ref < targetNode.deathRangeTo){
+      targetNode.deathRangeTo = ref;
+    }
+  }
+  applyDeceasedHint(fn, p.fatherDeceased);
+  applyDeceasedHint(mn, p.motherDeceased);
+  applyDeceasedHint(nodes[nodeId+'pp'], p.pgfDeceased);
+  applyDeceasedHint(nodes[nodeId+'pm'], p.pgmDeceased);
+  applyDeceasedHint(nodes[nodeId+'mp'], p.mgfDeceased);
+  applyDeceasedHint(nodes[nodeId+'mm'], p.mgmDeceased);
+  // También aplicamos lo mismo desde hermanos (si en el acta de un hermano
+  // el padre/abuelo aparece como difunto, esa fecha es otra cota válida).
+  var sibList2 = sibs[nodeId] || [];
+  for(var sk=0; sk<sibList2.length; sk++){
+    var sb2 = sibList2[sk];
+    if(!sb2.birthDateExact && !sb2.birthRangeFrom) continue;
+    var refSb = sb2.birthDateExact || sb2.birthRangeFrom;
+    function hintFromSib(target, dec){
+      if(!dec || !target) return;
+      if(target.deathDate) return;
+      if(!target.deathRangeTo || refSb < target.deathRangeTo){
+        target.deathRangeTo = refSb;
+      }
+    }
+    hintFromSib(fn, sb2.fatherDeceased);
+    hintFromSib(mn, sb2.motherDeceased);
+    hintFromSib(nodes[nodeId+'pp'], sb2.pgfDeceased);
+    hintFromSib(nodes[nodeId+'pm'], sb2.pgmDeceased);
+    hintFromSib(nodes[nodeId+'mp'], sb2.mgfDeceased);
+    hintFromSib(nodes[nodeId+'mm'], sb2.mgmDeceased);
+  }
+
+  fn.unlocked = true;
+  mn.unlocked = true;
+
+  // ───────────────────────────────────────────────
+  // PROPAGACIÓN HACIA ABAJO
+  // El lugar de nacimiento y la fecha exacta de este nodo (p) afectan a sus
+  // descendientes (hijo y nieto): el `fatherOrigin`/`motherOrigin` del hijo y
+  // el `pgfOrigin`/etc del nieto que cita a este nodo en su acta deben
+  // reflejar el último valor. Si p tiene fecha exacta y los descendientes
+  // también, se recalcula la edad declarada para corregir incongruencias.
+  // ───────────────────────────────────────────────
+  if(nodeId !== '0'){
+    var childId = nodeId.slice(0, -1);
+    var lastChar = nodeId.slice(-1);
+    var sidePref = (lastChar === 'p') ? 'father' : 'mother';
+    var child = nodes[childId];
+    if(child){
+      // Lugar de nacimiento → "Origen del padre/madre" en el acta del hijo
+      if(p.birthPlace) child[sidePref+'Origin'] = p.birthPlace;
+      // Si ambos tienen fecha exacta, recalculamos la edad declarada
+      if(p.birthDateExact && child.birthDateExact){
+        var realAge = yearsBetween(p.birthDateExact, child.birthDateExact);
+        if(realAge != null && realAge >= 0) child[sidePref+'Age'] = realAge;
+      }
+    }
+  }
+  // Hacia el nieto (gen 2 abajo): este nodo es abuelo, el nieto cita en su
+  // acta los datos del abuelo (pgfOrigin/pgmOrigin/mgfOrigin/mgmOrigin)
+  if(nodeId.length >= 3){
+    var grandchildId = nodeId.slice(0, -2);
+    var lastTwo = nodeId.slice(-2);
+    var gpPrefMap = {'pp':'pgf','pm':'pgm','mp':'mgf','mm':'mgm'};
+    var gpPref = gpPrefMap[lastTwo];
+    var gchild = nodes[grandchildId];
+    if(gpPref && gchild){
+      if(p.birthPlace) gchild[gpPref+'Origin'] = p.birthPlace;
+      if(p.birthDateExact && gchild.birthDateExact){
+        var realGAge = yearsBetween(p.birthDateExact, gchild.birthDateExact);
+        if(realGAge != null && realGAge >= 0) gchild[gpPref+'Age'] = realGAge;
+      }
+    }
+  }
+}
+
+// Edad de A cuando nació B, en años cumplidos.
+function yearsBetween(isoFrom, isoTo){
+  if(!isoFrom || !isoTo) return null;
+  var f = isoFrom.split('-'), t = isoTo.split('-');
+  if(f.length<3 || t.length<3) return null;
+  var fy=parseInt(f[0],10), fm=parseInt(f[1],10), fd=parseInt(f[2],10);
+  var ty=parseInt(t[0],10), tm=parseInt(t[1],10), td=parseInt(t[2],10);
+  if(isNaN(fy)||isNaN(ty)) return null;
+  var age = ty - fy;
+  if(tm < fm || (tm===fm && td < fd)) age--;
+  return age;
+}
+
+// ═══════════════════════════════════════════════════
+// ELEGIBILIDAD «ACTAS A BUSCAR»
+// ═══════════════════════════════════════════════════
+function searchStatus(n){
+  // devuelve null si no es apto, o {group:'registro'|'parroquia'|'agotado'}
+  if(!n.unlocked) return null;
+  if(n.birthDateExact) return null;             // acta obtenida
+  if(!n.birthRangeFrom || !n.birthRangeTo) return null; // sin rango
+  if(!n.birthPlace) return null;                // sin pueblo
+  if(n.negRegistro && n.negParroquia) return {group:'agotado'};
+  // El Registro Civil español empezó el 1 de enero de 1871. Si el rango
+  // entero es anterior a esa fecha, no tiene sentido pedir al RC: parroquia.
+  if(n.birthRangeTo && n.birthRangeTo < '1871-01-01') return {group:'parroquia'};
+  if(n.negRegistro) return {group:'parroquia'};
+  return {group:'registro'};
+}
+
+// ═══════════════════════════════════════════════════
+// ABANICO (fan chart, estilo FamilySearch)
+// ═══════════════════════════════════════════════════
+function polar(cx, cy, r, angleDeg){
+  var a = angleDeg * Math.PI / 180;
+  return { x: cx + r*Math.cos(a), y: cy - r*Math.sin(a) };
+}
+
+function sectorPath(cx, cy, r0, r1, a0, a1){
+  // a0 > a1 (de izquierda 180 a derecha 0)
+  var p1 = polar(cx,cy,r0,a0), p2 = polar(cx,cy,r0,a1);
+  var p3 = polar(cx,cy,r1,a1), p4 = polar(cx,cy,r1,a0);
+  var large = (a0-a1)>180 ? 1 : 0;
+  return 'M '+p1.x.toFixed(1)+' '+p1.y.toFixed(1)+
+    ' A '+r0+' '+r0+' 0 '+large+' 1 '+p2.x.toFixed(1)+' '+p2.y.toFixed(1)+
+    ' L '+p3.x.toFixed(1)+' '+p3.y.toFixed(1)+
+    ' A '+r1+' '+r1+' 0 '+large+' 0 '+p4.x.toFixed(1)+' '+p4.y.toFixed(1)+' Z';
+}
+
+// ═══════════════════════════════════════════════════
+// ICONOS SVG — librería mínima de líneas finas con stroke=currentColor para que
+// hereden el color del contexto. Sustituyen a los emojis que se veían
+// inconsistentes en iOS Safari y entre fuentes.
+// ═══════════════════════════════════════════════════
+var ICONS = {
+  clipboard: '<rect x="6" y="4" width="12" height="18" rx="2"/><rect x="9" y="2.5" width="6" height="3.5" rx="1" fill="currentColor" stroke="none"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="14.5" x2="15" y2="14.5"/><line x1="9" y1="18" x2="13" y2="18"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  bars: '<line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="5"/><line x1="18" y1="20" x2="18" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/>',
+  search: '<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/>',
+  fan: '<path d="M3 20a9 9 0 0118 0"/><path d="M3 20h18"/><line x1="9" y1="20" x2="6.5" y2="12"/><line x1="15" y1="20" x2="17.5" y2="12"/><line x1="12" y1="20" x2="12" y2="11"/>',
+  idcard: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="8" cy="12" r="2.4"/><path d="M4.2 16.6c.5-1.7 2-2.6 3.8-2.6s3.3.9 3.8 2.6"/><line x1="14" y1="11" x2="19" y2="11"/><line x1="14" y1="14" x2="18" y2="14"/>',
+  user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6"/>',
+  couple: '<circle cx="8" cy="9" r="2.5"/><circle cx="16" cy="9" r="2.5"/><path d="M3 19c0-2.5 2-3.8 5-3.8s5 1.3 5 3.8"/><path d="M11 19c0-2.5 2-3.8 5-3.8s5 1.3 5 3.8"/>',
+  cross: '<line x1="12" y1="3" x2="12" y2="20"/><line x1="7" y1="9" x2="17" y2="9"/>',
+  notes: '<path d="M6 3h8l4 4v13a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v4h4"/><line x1="8" y1="12" x2="15" y2="12"/><line x1="8" y1="16" x2="15" y2="16"/><line x1="8" y1="20" x2="12" y2="20"/>',
+  pin: '<path d="M12 21s-7-8-7-13a7 7 0 0114 0c0 5-7 13-7 13z"/><circle cx="12" cy="8" r="2.4"/>',
+  hourglass: '<line x1="6" y1="3" x2="18" y2="3"/><line x1="6" y1="21" x2="18" y2="21"/><path d="M7 3v3c0 1 .4 1.8 1.2 2.4l3.8 2.6 3.8-2.6c.8-.6 1.2-1.4 1.2-2.4V3"/><path d="M7 21v-3c0-1 .4-1.8 1.2-2.4l3.8-2.6 3.8 2.6c.8.6 1.2 1.4 1.2 2.4v3"/>',
+  inboxIn: '<path d="M3 13v6a2 2 0 002 2h14a2 2 0 002-2v-6"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  inboxOut: '<path d="M3 13v6a2 2 0 002 2h14a2 2 0 002-2v-6"/><polyline points="7 8 12 3 17 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  doc: '<path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="14 3 14 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>',
+  alert: '<path d="M12 3l10 18H2L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17.5" r=".7" fill="currentColor" stroke="none"/>',
+  dot: '<circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>'
+};
+function ic(name, extraStyle){
+  var p = ICONS[name] || '';
+  var s = extraStyle ? ' style="'+extraStyle+'"' : '';
+  return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"'+s+'>'+p+'</svg>';
+}
+
+
+// Modo de colores del abanico: 'branch' (por estirpe), 'status' (por estado del
+// acta) o 'town' (un color por pueblo de nacimiento distinto)
+var fanColorMode = 'branch';
+try { var savedMode = localStorage.getItem('fan_color_mode'); if(savedMode) fanColorMode = savedMode; } catch(e){}
+
+// Mapa pueblo → color HSL. Se reconstruye cada vez que cambia la lista de
+// pueblos del árbol. Los hues se distribuyen uniformemente para que cada
+// pueblo tenga un color claramente distinto del resto.
+var pueblosColorMap = {};
+function rebuildPueblosColorMap(){
+  var seen = {};
+  for(var id in nodes){
+    var nx = nodes[id];
+    if(!nx || !nx.unlocked) continue;
+    if(!nx.firstName || !nx.firstName.trim()) continue;
+    if(!nx.birthPlace) continue;
+    seen[nx.birthPlace.trim()] = true;
+  }
+  var lista = Object.keys(seen).sort();
+  pueblosColorMap = {};
+  var n = Math.max(1, lista.length);
+  for(var i=0; i<lista.length; i++){
+    // Hues distribuidos con un pequeño offset para evitar empezar en rojo puro
+    var hue = Math.round(((360 * i) / n + 22) % 360);
+    pueblosColorMap[lista[i]] = 'hsl('+hue+',52%,78%)';
+  }
+}
+function getPuebloColor(p){
+  if(!p) return '#f6f0e4';
+  var k = p.trim();
+  if(pueblosColorMap[k]) return pueblosColorMap[k];
+  rebuildPueblosColorMap();
+  return pueblosColorMap[k] || '#f6f0e4';
+}
+
+function setFanColorMode(m){
+  fanColorMode = m;
+  try { localStorage.setItem('fan_color_mode', m); } catch(e){}
+  syncFanLegend();
+  renderFan();
+}
+function syncFanLegend(){
+  var leg = document.getElementById('fan-legend');
+  if(!leg) return;
+  if(fanColorMode === 'status'){
+    leg.innerHTML =
+      '<div class="leg-item"><span class="leg-sw" style="background:#7fae8c"></span>Acta obtenida</div>'
+    + '<div class="leg-item"><span class="leg-sw" style="background:#d9bc6e"></span>Lista para buscar</div>'
+    + '<div class="leg-item"><span class="leg-sw" style="background:#cf7a5e"></span>Datos inconexos</div>'
+    + '<div class="leg-item"><span class="leg-sw" style="background:#e8dcbf"></span>Sólo nombre</div>'
+    + '<div class="leg-item"><span class="leg-sw" style="background:#ece5d6;border-color:#c8bca0"></span>Pendiente</div>';
+    leg.style.display = 'flex';
+  } else if(fanColorMode === 'town'){
+    rebuildPueblosColorMap();
+    var keys = Object.keys(pueblosColorMap).sort();
+    var html = '';
+    for(var i=0; i<keys.length; i++){
+      html += '<div class="leg-item"><span class="leg-sw" style="background:'+pueblosColorMap[keys[i]]+'"></span>'+esc(keys[i])+'</div>';
+    }
+    leg.innerHTML = html;
+    leg.style.display = keys.length ? 'flex' : 'none';
+  } else {
+    leg.innerHTML = '';
+    leg.style.display = 'none';
+  }
+}
+
+// Color por rama (estilo FamilySearch): el primer y segundo bit de la línea
+// determinan el cuadrante; la saturación refleja cuánto sabemos del perfil.
+// Modo alternativo: por estado del acta (verde acta obtenida, ámbar rango,
+// rojizo conflictos, pálido pendiente).
+function fanColor(id){
+  var n = nodes[id];
+  var path = pathOf(id);
+  if(path.length===0) return '#f4ecd6';
+
+  // Casilla "hueco real": si la persona no tiene nombre confirmado o ni
+  // siquiera está desbloqueada, devolvemos el color del fondo del abanico
+  // (var(--parch) = #f6f0e4) para que se funda visualmente con él.
+  if(!n || !n.unlocked || !n.firstName || !n.firstName.trim()) return '#f6f0e4';
+
+  if(fanColorMode === 'town'){
+    if(!n.birthPlace) return '#f6f0e4';
+    return getPuebloColor(n.birthPlace);
+  }
+
+  if(fanColorMode === 'status'){
+    if(n.birthDateExact)  return '#7fae8c';        // acta obtenida
+    if(n.rangeConflict)   return '#cf7a5e';        // datos inconexos
+    if(n.birthRangeFrom)  return '#d9bc6e';        // rango estimado
+    if(n.surname1)        return '#e8dcbf';        // nombre conocido
+    return '#ece5d6';
+  }
+
+  // modo 'branch'
+  var hueMap = {
+    'p':   85,
+    'm':   345,
+    'pp':  78,
+    'pm':  25,
+    'mp':  348,
+    'mm':  48
+  };
+  var key = path.length===1 ? path[0] : (path[0]+path[1]);
+  var hue = hueMap[key] !== undefined ? hueMap[key] : 100;
+
+  var sat = 38;
+  if(n.birthRangeFrom) sat = 48;
+  if(n.birthDateExact) sat = 56;
+  var light = Math.min(82 + path.length*1.2, 92);
+  return 'hsl('+hue+','+sat+'%,'+light+'%)';
+}
+
+function fanStroke(id){
+  var n = nodes[id];
+  var path = pathOf(id);
+  // Sin nombre → borde también invisible para hueco real
+  if(path.length>0 && (!n || !n.unlocked || !n.firstName || !n.firstName.trim())) return '#f6f0e4';
+  if(n && n.rangeConflict) return '#b85535';
+  return '#fff';
+}
+function fanStrokeWidth(id){
+  var n = nodes[id];
+  var path = pathOf(id);
+  if(path.length>0 && (!n || !n.unlocked || !n.firstName || !n.firstName.trim())) return 0;
+  if(n && n.rangeConflict) return 1.8;
+  return 1.0;
+}
+
+function idFromIndex(g, idx){
+  var id='0';
+  for(var b=g-1;b>=0;b--){
+    id += ((idx>>b)&1)===0 ? 'p' : 'm';
+  }
+  return id;
+}
+
+// Devuelve líneas de texto a renderizar dentro de un sector, según la generación.
+// Con layout radial, cada línea es una columna a lo largo del radio: conviene
+// separar en líneas cortas (5–10 caracteres por línea) para mejor legibilidad.
+function buildSectorLines(n, g){
+  if(!n || !n.unlocked) return [];
+  var name = (n.firstName||'').trim();
+  // Si no hay nombre confirmado en esta casilla, los apellidos están propagados
+  // automáticamente desde un descendiente y no representan certeza sobre quién
+  // era esta persona — dejamos el sector vacío hasta tener al menos el nombre.
+  if(!name) return [];
+  var s1 = (n.surname1||'').trim();
+  var s2 = (n.surname2||'').trim();
+  var dateStr = '';
+  if(n.birthDateExact){
+    dateStr = n.birthDateExact.split('-')[0];
+  } else if(n.birthRangeFrom && n.birthRangeTo){
+    var y1 = n.birthRangeFrom.split('-')[0];
+    var y2 = n.birthRangeTo.split('-')[0];
+    dateStr = y1===y2 ? y1 : (y1+'–'+y2);
+  }
+
+  // Para el root y gens 1-3: nombre / 1er apellido / 2º apellido / fecha (4 líneas)
+  if(g<=3){
+    var lines = [name];
+    if(s1) lines.push(s1);
+    if(s2) lines.push(s2);
+    if(dateStr) lines.push(dateStr);
+    return lines;
+  }
+  // gen 4-5: nombre / 1er apellido / fecha (3 líneas)
+  if(g<=5){
+    var l45 = [name];
+    if(s1) l45.push(s1);
+    if(dateStr) l45.push(dateStr);
+    return l45;
+  }
+  // gen 6-7: nombre / apellido (sin fecha)
+  if(g<=7){
+    var l67 = [name];
+    if(s1) l67.push(s1);
+    return l67;
+  }
+  // gen 8+: una sola línea
+  var brief = (name+' '+s1).trim();
+  if(brief.length>12) brief = brief.slice(0,11)+'…';
+  return [brief];
+}
+
+// Estima cuánto texto en píxeles cabe en una línea tangencial a radio r dentro de un sector de anchura angular `sectorDeg`.
+function arcSpace(r, sectorDeg){
+  return r * sectorDeg * Math.PI / 180;
+}
+
+// Trunca un string para que quepa en `maxPx` con la fuente `fontSize`.
+function fitText(s, maxPx, fontSize){
+  if(!s) return s;
+  // estimación grosera: 0.55em por carácter
+  var maxChars = Math.floor(maxPx / (fontSize*0.55));
+  if(maxChars >= s.length) return s;
+  if(maxChars < 3) return '';
+  return s.slice(0, Math.max(1, maxChars-1)) + '…';
+}
+
+function renderFan(){
+  var holder = document.getElementById('fan-svg-holder');
+  if(!holder) return;
+  // sincronizar el selector de modo con el estado actual
+  var modeSel = document.getElementById('fan-color-mode');
+  if(modeSel && modeSel.value !== fanColorMode) modeSel.value = fanColorMode;
+  syncFanLegend();
+  var depth = parseInt(document.getElementById('fan-depth').value,10) || 5;
+  // anillo más ancho que antes para que quepan varias líneas
+  var rRoot = 65;
+  var ringW = Math.max(58, Math.floor((520-rRoot)/depth));
+  var radius = rRoot + depth*ringW;
+  var W = Math.max(900, radius*2 + 60);
+  var H = radius + 80;
+  var cx = W/2, cy = H - 40;
+
+  var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif">';
+
+  // raíz: semicírculo central con nombre completo + fecha
+  var root = nodes['0'];
+  svg += '<path class="fan-sector" d="M '+(cx-rRoot)+' '+cy+' A '+rRoot+' '+rRoot+' 0 0 1 '+(cx+rRoot)+' '+cy+' Z" fill="'+fanColor('0')+'" stroke="#fff" stroke-width="1.5" onclick="openModal(\'0\')"/>';
+  var rootLines = buildSectorLines(root, 0);
+  if(!rootLines.length) rootLines = [(root && (root.firstName||root.surname1)) ? (root.firstName+' '+(root.surname1||'')).trim() : 'Tú'];
+  if(!rootLines.length) rootLines = ['Tú'];
+  var rootName = (root && root.firstName ? root.firstName : 'Tú');
+  var rootSur = (root && root.surname1 ? (root.surname1 + (root.surname2?' '+root.surname2:'')) : '');
+  var rootDate = '';
+  if(root && root.birthDateExact) rootDate = root.birthDateExact.split('-')[0];
+  svg += '<text x="'+cx+'" y="'+(cy-32)+'" text-anchor="middle" font-size="14" font-weight="600" fill="#1c1712">'+escXml(rootName)+'</text>';
+  if(rootSur) svg += '<text x="'+cx+'" y="'+(cy-16)+'" text-anchor="middle" font-size="11" fill="#1c1712">'+escXml(rootSur)+'</text>';
+  if(rootDate) svg += '<text x="'+cx+'" y="'+(cy-3)+'" text-anchor="middle" font-size="10" fill="#6b5e48">'+escXml(rootDate)+'</text>';
+
+  for(var g=1; g<=depth; g++){
+    var count = Math.pow(2,g);
+    var step = 180/count;
+    var r0 = rRoot+(g-1)*ringW, r1 = rRoot+g*ringW;
+    var midR = (r0+r1)/2;
+    for(var i=0;i<count;i++){
+      var id = idFromIndex(g,i);
+      var n = nodes[id];
+      // a0 = ángulo del borde "izquierdo" del sector (mayor), a1 = borde derecho (menor)
+      var a0 = 180 - i*step, a1 = 180 - (i+1)*step;
+      var mid = (a0+a1)/2;
+      var fill = fanColor(id);
+      var stroke = fanStroke(id);
+      var sw = fanStrokeWidth(id);
+      var click = (n && n.unlocked) ? ' style="cursor:pointer" onclick="openModal(\''+id+'\')"' : '';
+      svg += '<path class="fan-sector" d="'+sectorPath(cx,cy,r0,r1,a0,a1)+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"'+click+'/>';
+
+      if(!n || !n.unlocked) continue;
+      var lines = buildSectorLines(n, g);
+      if(!lines.length) continue;
+
+      // Tamaño de fuente según generación
+      var fs;
+      if(g===1) fs = 13;
+      else if(g===2) fs = 12;
+      else if(g===3) fs = 11;
+      else if(g===4) fs = 10;
+      else if(g===5) fs = 9;
+      else fs = 8;
+
+      // === LAYOUT RADIAL TIPO FAMILYSEARCH ===
+      // Cada línea es una columna que se lee A LO LARGO del radio.
+      // Las múltiples líneas se reparten tangencialmente dentro del sector.
+      // Para que NUNCA aparezca texto del revés, los sectores con ángulo > 90°
+      // leen hacia DENTRO (rotación 180-α) y los de ≤90° hacia FUERA (rotación -α).
+      // En ambos casos, las "cimas" de las letras apuntan hacia arriba.
+
+      var nLines = lines.length;
+      var sectorAng = a0 - a1;
+      var spacing = sectorAng / nLines;
+      var maxRadialPx = (r1 - r0) - 6;
+      var maxChars = Math.max(3, Math.floor(maxRadialPx / (fs * 0.58)));
+
+      for(var L=0; L<nLines; L++){
+        // ángulo de esta línea: la primera línea (nombre) debe quedar SIEMPRE
+        // pegada al borde más cercano a los 90° (el "techo" del abanico), para
+        // que arriba en pantalla aparezca el nombre y debajo las fechas.
+        //  · Mitad derecha (mid≤90): borde superior = a0 (más cerca de 90°)
+        //  · Mitad izquierda (mid>90): borde superior = a1 (más cerca de 90°)
+        var lineAngle;
+        if(mid <= 90){
+          lineAngle = a0 - (L + 0.5) * spacing;
+        } else {
+          lineAngle = a1 + (L + 0.5) * spacing;
+        }
+
+        // Rotación radial sin invertir letras
+        var R;
+        if(lineAngle <= 90){
+          R = -lineAngle;          // lee hacia fuera, cabezas a la izquierda-arriba
+        } else {
+          R = 180 - lineAngle;     // lee hacia dentro, cabezas a la derecha-arriba
+        }
+
+        var text = lines[L];
+        if(text.length > maxChars){
+          text = text.slice(0, Math.max(1, maxChars-1)) + '…';
+        }
+
+        var pt = polar(cx, cy, midR, lineAngle);
+        var weight = (L===0) ? '600' : '400';
+        var col = (L===nLines-1 && /^\d/.test(text)) ? '#5c4e3a' : '#1c1712';
+
+        svg += '<text x="'+pt.x.toFixed(1)+'" y="'+pt.y.toFixed(1)+'" text-anchor="middle" dominant-baseline="middle" font-size="'+fs+'" font-weight="'+weight+'" fill="'+col+'" transform="rotate('+R.toFixed(1)+' '+pt.x.toFixed(1)+' '+pt.y.toFixed(1)+')" style="pointer-events:none">'+escXml(text)+'</text>';
+      }
+    }
+  }
+  svg += '</svg>';
+  holder.innerHTML = svg;
+}
+
+function firstWord(s){ return (s||'').split(' ')[0]; }
+function escXml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// ═══════════════════════════════════════════════════
+// VISTAS
+// ═══════════════════════════════════════════════════
+function switchView(v){
+  var views=['fan','search','stats'];
+  for(var i=0;i<views.length;i++){
+    var el = document.getElementById('view-'+views[i]);
+    if(el) el.style.display = views[i]===v ? '' : 'none';
+  }
+  var tabs = document.querySelectorAll('.vtab');
+  for(var j=0;j<tabs.length;j++){
+    tabs[j].className = tabs[j].getAttribute('data-view')===v ? 'vtab active' : 'vtab';
+  }
+  if(v==='fan') renderFan();
+  if(v==='search') renderSearchPanel();
+  if(v==='stats') renderStats();
+}
+
+function renderAll(){
+  renderFan();
+  renderSearchPanel();
+  renderStats();
+}
+
+// ═══════════════════════════════════════════════════
+// BUSCADOR GLOBAL
+// ═══════════════════════════════════════════════════
+function runSearch(){
+  var q = document.getElementById('searchbox').value.trim().toLowerCase();
+  var box = document.getElementById('search-results');
+  if(q.length<2){ box.className=''; box.innerHTML=''; return; }
+  var hits = [];
+  for(var id in nodes){
+    var n = nodes[id];
+    if(!n.unlocked) continue;
+    var hay = (fullName(n)+' '+(n.alias||'')+' '+(n.officialName||'')).toLowerCase();
+    if(hay.indexOf(q)>=0) hits.push(n);
+  }
+  hits.sort(function(a,b){ return a.gen-b.gen; });
+  if(!hits.length){ box.className='open'; box.innerHTML='<div class="sr-item">Sin resultados</div>'; return; }
+  var html='';
+  for(var i=0;i<Math.min(hits.length,12);i++){
+    var n2=hits[i];
+    html += '<div class="sr-item" onclick="openFromSearch(\''+n2.id+'\')">'
+      + '<div class="sr-role">'+esc(n2.role)+'</div>'
+      + esc(fullName(n2) || '(sin nombre)')
+      + (n2.officialName?' <span style="color:var(--fog);font-size:.7rem">— en acta: '+esc(n2.officialName)+'</span>':'')
+      + '</div>';
+  }
+  box.className='open'; box.innerHTML=html;
+}
+function openFromSearch(id){
+  document.getElementById('search-results').className='';
+  document.getElementById('searchbox').value='';
+  openModal(id);
+}
+
+// ═══════════════════════════════════════════════════
+// PANEL ACTAS A BUSCAR — filtros pueblo + orden
+// ═══════════════════════════════════════════════════
+var activeTownFilter = null;
+var searchSort = 'date-desc';
+
+function toggleInfoPop(){
+  var el = document.getElementById('info-pop');
+  el.className = el.className.indexOf('open')>=0 ? 'info-pop' : 'info-pop open';
+}
+
+function setTownFilter(t){
+  activeTownFilter = (activeTownFilter===t) ? null : t;
+  renderSearchPanel();
+}
+function setSearchSort(sel){
+  searchSort = sel.value;
+  renderSearchPanel();
+}
+
+function renderSearchPanel(){
+  var body = document.getElementById('spanel-body');
+  var filtersEl = document.getElementById('search-filters');
+  if(!body) return;
+
+  var items = [];
+  for(var id in nodes){
+    var n = nodes[id];
+    var st = searchStatus(n);
+    if(st) items.push({n:n, group:st.group});
+  }
+
+  // chips de pueblos
+  var towns = {};
+  for(var i=0;i<items.length;i++){
+    var t = items[i].n.birthPlace;
+    if(t) towns[t] = (towns[t]||0)+1;
+  }
+  var townKeys = Object.keys(towns).sort();
+  var fh = '';
+  for(var k=0;k<townKeys.length;k++){
+    var tw = townKeys[k];
+    fh += '<button class="chip'+(activeTownFilter===tw?' active':'')+'" onclick="setTownFilter(\''+esc(tw).replace(/'/g,"\\'")+'\')">'+esc(tw)+' ('+towns[tw]+')</button>';
+  }
+  fh += '<select onchange="setSearchSort(this)">'
+    + '<option value="date-asc"'+(searchSort==='date-asc'?' selected':'')+'>Nacimiento: antiguos primero</option>'
+    + '<option value="date-desc"'+(searchSort==='date-desc'?' selected':'')+'>Nacimiento: recientes primero</option>'
+    + '<option value="gen"'+(searchSort==='gen'?' selected':'')+'>Por generación</option>'
+    + '</select>';
+  filtersEl.innerHTML = fh;
+
+  // filtrar
+  if(activeTownFilter){
+    items = items.filter(function(it){ return it.n.birthPlace===activeTownFilter; });
+  }
+
+  // ordenar: prioridad registro > parroquia > agotado, luego criterio
+  var gOrder = {registro:0, parroquia:1, agotado:2};
+  items.sort(function(a,b){
+    if(gOrder[a.group]!==gOrder[b.group]) return gOrder[a.group]-gOrder[b.group];
+    if(searchSort==='gen') return a.n.gen-b.n.gen;
+    var da = a.n.birthRangeFrom||'9999', db = b.n.birthRangeFrom||'9999';
+    return searchSort==='date-desc' ? (db<da?-1:db>da?1:0) : (da<db?-1:da>db?1:0);
+  });
+
+  if(!items.length){
+    body.innerHTML = '<p class="no-data-msg">'+(activeTownFilter?'No hay actas pendientes en '+esc(activeTownFilter)+'.':'No hay perfiles aptos para búsqueda. Introduce actas con edades de los padres para generar rangos.')+'</p>';
+    return;
+  }
+
+  var groupNames = {registro:'Registro civil', parroquia:'Parroquia', agotado:'Vías agotadas'};
+  var html = '<div class="sitems">';
+  for(var j=0;j<items.length;j++){
+    var it = items[j], n3 = it.n;
+    // Refresca el rol por si la nomenclatura cambió y el role del nodo era anterior
+    n3.role = roleOf(n3.id);
+    // Datos de los padres del ancestro. Solo consideramos "conocido" al
+    // padre/madre si su nodo tiene firstName (o officialName, o alias).
+    var fNode = nodes[n3.id+'p'], mNode = nodes[n3.id+'m'];
+    var fatherStr;
+    if(fNode && displayGivenName(fNode)) fatherStr = displayFullName(fNode);
+    else if(n3.fatherFirstName) fatherStr = [n3.fatherFirstName,n3.fatherSurname1,n3.fatherSurname2].filter(Boolean).join(' ');
+    else fatherStr = 'Desconocido';
+    var motherStr;
+    if(mNode && displayGivenName(mNode)) motherStr = displayFullName(mNode);
+    else if(n3.motherFirstName) motherStr = [n3.motherFirstName,n3.motherSurname1,n3.motherSurname2].filter(Boolean).join(' ');
+    else motherStr = 'Desconocida';
+    var parentsHTML = '<strong>Padre:</strong> '+esc(fatherStr)+'<br>'
+                    + '<strong>Madre:</strong> '+esc(motherStr)+'<br>';
+
+    // Tick "acta solicitada" + contador de días en espera, solo para
+    // certificados de registro civil. Si está marcado se muestra cuántos
+    // días lleva pendiente y un botón "↻" para reiniciar el contador
+    // (por si se ha solicitado a otro registro). El contador se cierra solo
+    // cuando se introduce la fecha exacta de nacimiento (el acta sale de la
+    // lista de pendientes).
+    var requestedHTML = '';
+    if(it.group === 'registro'){
+      var isReq = !!n3.certRequestedAt;
+      var daysHTML = '';
+      if(isReq){
+        var ms = Date.now() - new Date(n3.certRequestedAt).getTime();
+        var days = Math.max(0, Math.floor(ms / 86400000));
+        var dayLabel = (days===0) ? 'solicitado hoy' : ('en espera desde hace '+days+' día'+(days===1?'':'s'));
+        daysHTML = '<span class="cert-req-days">'+dayLabel+'</span>'
+                 + '<button class="cert-req-restart" onclick="event.stopPropagation();restartCertRequested(\''+n3.id+'\')" title="Reiniciar contador" aria-label="Reiniciar contador">'
+                 + '<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block"><path d="M3 12a9 9 0 1015-6.7"/><polyline points="18 2 18 6 14 6"/></svg>'
+                 + '</button>';
+      }
+      requestedHTML = '<div class="cert-req" onclick="event.stopPropagation()">'
+        + '<label class="cert-req-tick"><input type="checkbox" '+(isReq?'checked':'')+' onchange="toggleCertRequested(\''+n3.id+'\', this.checked)">'
+        + '<span>Acta solicitada</span></label>'
+        + daysHTML
+        + '</div>';
+    }
+
+    html += '<div class="sitem g-'+it.group+'" onclick="openModal(\''+n3.id+'\')">'
+      + '<div class="sitem-role"><span>'+esc(n3.role)+'</span><span class="badge '+it.group+'">'+groupNames[it.group]+'</span></div>'
+      + '<div class="sitem-name">'+esc(displayFullName(n3)||'(nombre por confirmar)')+'</div>'
+      + '<div class="sitem-data">'
+      + '<strong>Nació entre:</strong> '+fmtES(n3.birthRangeFrom)+' y '+fmtES(n3.birthRangeTo)+'<br>'
+      + '<strong>Lugar:</strong> '+esc(n3.birthPlace)+'<br>'
+      + parentsHTML
+      + (n3.rangeConflict ? '<span style="color:var(--rust)">'+alert_svg_inline_str()+'Rangos de fuentes inconexos (edades posiblemente mal declaradas)</span><br>' : '')
+      + (n3.officialName && n3.firstName && n3.officialName!==n3.firstName ? '<strong>Nombre conocido:</strong> '+esc(n3.firstName)+'<br>' : '')
+      + '</div>'
+      + requestedHTML
+      + '</div>';
+  }
+  html += '</div>';
+  body.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+// TICK "ACTA SOLICITADA"
+// Guarda en el nodo el timestamp de cuándo se marcó como solicitada para
+// poder calcular días en espera. La espera termina sola cuando se rellena
+// birthDateExact (el acta sale de "actas a buscar").
+// ═══════════════════════════════════════════════════
+function toggleCertRequested(id, on){
+  var n = nodes[id];
+  if(!n) return;
+  n.certRequestedAt = on ? new Date().toISOString() : null;
+  saveLocal();
+  persistNode(id);
+  renderSearchPanel();
+}
+function restartCertRequested(id){
+  var n = nodes[id];
+  if(!n) return;
+  n.certRequestedAt = new Date().toISOString();
+  saveLocal();
+  persistNode(id);
+  renderSearchPanel();
+}
+// Helper para el SVG de alerta (lo usábamos como string literal antes)
+function alert_svg_inline_str(){
+  return '<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:.2rem"><path d="M12 3l10 18H2L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17.5" r=".7" fill="currentColor" stroke="none"/></svg>';
+}
+
+// ═══════════════════════════════════════════════════
+// SOLICITAR CERTIFICADO — abre la sede electrónica del Ministerio de Justicia
+// en pestaña nueva. La sede no permite pre-rellenar el formulario por URL
+// (sesión + tokens CSRF), así que el botón es solo un atajo al portal.
+// ═══════════════════════════════════════════════════
+var CERT_URL = 'https://sede.mjusticia.gob.es/sereci/initDatosGenerales?idMateria=NAC';
+
+function solicitarCertificado(){
+  var w = window.open(CERT_URL, '_blank', 'noopener,noreferrer');
+  if(!w) window.location.href = CERT_URL;
+}
+
+function showCertificadoInfo(){
+  lockPageZoom('cert-help-bd');
+  document.getElementById('cert-help-bd').className='modal-backdrop open';
+}
+function closeCertHelp(){
+  document.getElementById('cert-help-bd').className='modal-backdrop';
+  unlockPageZoom('cert-help-bd');
+}
+
+// ═══════════════════════════════════════════════════
+// STATS APELLIDOS
+// ═══════════════════════════════════════════════════
+function renderStats(){
+  var body = document.getElementById('stats-body');
+  if(!body) return;
+  // counts[claveNormalizada] = {variants:[...], people:[{id,n,which}]}
+  // Solo cuentan apellidos de nodos con nombre puesto: un apellido sin
+  // nombre suele ser propagación automática del descendiente, no info real.
+  var counts = {};
+  var total = 0;
+  for(var id in nodes){
+    var n = nodes[id];
+    if(!n.unlocked) continue;
+    if(!n.firstName || !n.firstName.trim()) continue;
+    var surs = [n.surname1, n.surname2];
+    for(var i=0;i<2;i++){
+      var s = (surs[i]||'').trim();
+      if(!s) continue;
+      var key = normalizeSurname(s);
+      if(!key) continue;
+      if(!counts[key]) counts[key] = {variants:[], people:[]};
+      counts[key].variants.push(s);
+      counts[key].people.push({id:id, n:n, which:i});
+      total++;
+    }
+  }
+  if(!total){ body.innerHTML='<p class="no-data-msg">Añade nombres y apellidos a tus antepasados para ver las estadísticas.</p>'; return; }
+  var arr = Object.keys(counts).map(function(k){
+    return {key:k, label:preferredSurnameForm(counts[k].variants), count:counts[k].people.length, people:counts[k].people};
+  });
+  arr.sort(function(a,b){ return b.count-a.count; });
+  var max = arr[0].count;
+  var html='';
+  for(var j=0;j<arr.length;j++){
+    var pct = (100*arr[j].count/total);
+    // Agrupar portadores por línea genealógica (raíz '0', paterna 'p', materna 'm').
+    // Dentro de cada línea: orden ascendente por generación (yo → padre → abuelo → ...).
+    // Entre líneas: la más numerosa primero. La raíz '0' (si el apellido es del
+    // propio probando) siempre va arriba. Empate al azar.
+    var byLine = {};
+    for(var p=0; p<arr[j].people.length; p++){
+      var pe = arr[j].people[p];
+      var pathP = pathOf(pe.id);
+      var line = pathP.length===0 ? '0' : pathP[0];
+      if(!byLine[line]) byLine[line] = [];
+      byLine[line].push(pe);
+    }
+    var lineKeys = Object.keys(byLine);
+    for(var lk=0; lk<lineKeys.length; lk++){
+      byLine[lineKeys[lk]].sort(function(a,b){
+        return pathOf(a.id).length - pathOf(b.id).length;
+      });
+    }
+    lineKeys.sort(function(a,b){
+      if(a==='0') return -1;
+      if(b==='0') return 1;
+      var diff = byLine[b].length - byLine[a].length;
+      if(diff!==0) return diff;
+      return Math.random()-0.5;
+    });
+
+    var detailHTML = '<div class="stat-detail">';
+    var lineLabels = {'0':'Probando', 'p':'Línea paterna', 'm':'Línea materna'};
+    for(var lk2=0; lk2<lineKeys.length; lk2++){
+      var ln = lineKeys[lk2];
+      if(lineKeys.length>1){
+        detailHTML += '<div class="stat-detail-line">'+lineLabels[ln]+' ('+byLine[ln].length+')</div>';
+      }
+      var peopleLn = byLine[ln];
+      for(var p2=0; p2<peopleLn.length; p2++){
+        var pe2 = peopleLn[p2];
+        var role = pe2.n.role || roleOf(pe2.id);
+        var nm = displayFullName(pe2.n) || '(sin nombre)';
+        var town = pe2.n.birthPlace || '—';
+        detailHTML += '<div class="stat-detail-row" onclick="event.stopPropagation();openModal(\''+pe2.id+'\')">'
+          + '<span class="sdr-name">'+esc(nm)+'</span>'
+          + '<span class="sdr-role">'+esc(role)+'</span>'
+          + '<span class="sdr-town">'+ic('pin')+' '+esc(town)+'</span>'
+          + '</div>';
+      }
+    }
+    detailHTML += '</div>';
+
+    html += '<div class="stat-row-wrap">'
+      + '<div class="stat-row" onclick="toggleStatRow(this)">'
+      + '<div class="stat-name"><span class="stat-caret">▸</span> '+esc(arr[j].label)+'</div>'
+      + '<div class="stat-bar-bg"><div class="stat-bar" style="width:'+(100*arr[j].count/max).toFixed(1)+'%"></div></div>'
+      + '<div class="stat-pct">'+pct.toFixed(1)+'% ('+arr[j].count+')</div>'
+      + '</div>'
+      + detailHTML
+      + '</div>';
+  }
+  html += '<p style="font-size:.65rem;color:var(--fog-lt);padding:.5rem 0 0;font-style:italic">Porcentaje sobre '+total+' apellidos documentados entre tus antepasados directos con nombre confirmado. Variantes equivalentes (con/sin tilde, con/sin guion, con o sin «de»/«y») se cuentan como un único apellido y se muestra la forma más rica. Toca un apellido para ver quiénes lo llevaban y de dónde eran.</p>';
+  body.innerHTML = html;
+}
+
+function toggleStatRow(rowEl){
+  var wrap = rowEl.parentElement;
+  if(!wrap) return;
+  var detail = wrap.querySelector('.stat-detail');
+  var caret  = wrap.querySelector('.stat-caret');
+  if(!detail) return;
+  var open = detail.classList.contains('open');
+  if(open){ detail.classList.remove('open'); if(caret) caret.textContent='▸'; }
+  else    { detail.classList.add('open');    if(caret) caret.textContent='▾'; }
+}
+
+// ═══════════════════════════════════════════════════
+// ZOOM LOCK — el problema clave en iOS Safari es que el modal `position:fixed`
+// se ancla al "layout viewport" (página entera), no al "visual viewport"
+// (lo que el usuario ve). Si hay pinch-zoom activo en el árbol, el modal
+// se renderiza con ese mismo zoom y queda gigante / fuera de pantalla.
+//
+// Estrategia (combinada, defensiva):
+//  1. Intentamos forzar a iOS a salir del zoom con un toggle del meta viewport
+//     (`initial-scale=1.0001` → `1` con `user-scalable=no`).
+//  2. Si tras eso `visualViewport.scale > 1` (iOS no obedeció), aplicamos
+//     `transform: scale(1/scale)` al backdrop y lo reposicionamos para que
+//     cubra exactamente el área visible. El contenido del modal aparece a
+//     tamaño "normal" porque el scale-down compensa el zoom de la página.
+//  3. Cuando aplicamos el transform al backdrop, los `position:sticky` de
+//     dentro (cabecera y pie de botones) se rompen porque sticky se calcula
+//     contra el viewport del navegador. Marcamos el modal con .modal-vvp
+//     para que en ese modo el footer pase a `position:relative` (queda al
+//     final del scroll del modal, igual que la cabecera dentro del flujo).
+//  4. Guardamos el scroll de la página al abrir y lo restauramos al cerrar.
+// ═══════════════════════════════════════════════════
+var _origViewport = null;
+var _savedScroll = null;
+var _vvHandlers = {}; // backdropId → handler
+
+function lockPageZoom(backdropId){
+  // Guardamos el scroll actual para restaurarlo al cerrar el modal
+  if(_savedScroll === null){
+    _savedScroll = {x: window.scrollX||window.pageXOffset||0, y: window.scrollY||window.pageYOffset||0};
+  }
+  var vp = document.querySelector('meta[name=viewport]');
+  if(vp && _origViewport === null){
+    _origViewport = vp.getAttribute('content');
+    // truco iOS: setear initial-scale ligeramente distinto (1.0001) y volverlo
+    // a 1 fuerza al motor a recomputar el viewport, lo cual desactiva el zoom.
+    vp.setAttribute('content','width=device-width, initial-scale=1.0001, minimum-scale=1, maximum-scale=1, user-scalable=no');
+    setTimeout(function(){
+      vp.setAttribute('content','width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no');
+    }, 10);
+  }
+  // Fallback visualViewport: compensar el zoom de la página al backdrop
+  if(window.visualViewport && backdropId){
+    var bd = document.getElementById(backdropId);
+    if(!bd) return;
+    function adjust(){
+      var vv = window.visualViewport;
+      var s = vv.scale || 1;
+      if(s > 1.02){
+        // Hay zoom residual: compensamos manualmente.
+        // El backdrop ocupa el LAYOUT scaled (vv.width * s) y se reduce 1/s,
+        // así que visualmente queda exactamente sobre el área visible.
+        bd.style.position = 'fixed';
+        bd.style.left = '0';
+        bd.style.top = '0';
+        bd.style.width = (vv.width * s) + 'px';
+        bd.style.height = (vv.height * s) + 'px';
+        bd.style.transformOrigin = '0 0';
+        bd.style.transform = 'translate('+vv.offsetLeft+'px,'+vv.offsetTop+'px) scale('+(1/s)+')';
+        // Marca para que CSS rebaje el sticky → relative en cabecera y pie
+        bd.classList.add('vvp-scaled');
+      } else {
+        // No hay zoom: dejar al CSS hacer su trabajo
+        bd.style.position = '';
+        bd.style.left = bd.style.top = bd.style.width = bd.style.height = '';
+        bd.style.transform = '';
+        bd.style.transformOrigin = '';
+        bd.classList.remove('vvp-scaled');
+      }
+    }
+    // Espera un instante a que iOS haya intentado el reset del meta viewport
+    setTimeout(adjust, 60);
+    _vvHandlers[backdropId] = adjust;
+    window.visualViewport.addEventListener('resize', adjust);
+    window.visualViewport.addEventListener('scroll', adjust);
+  }
+}
+
+function unlockPageZoom(backdropId){
+  var vp = document.querySelector('meta[name=viewport]');
+  if(vp && _origViewport !== null){
+    vp.setAttribute('content', _origViewport);
+    _origViewport = null;
+  }
+  if(backdropId && _vvHandlers[backdropId]){
+    if(window.visualViewport){
+      window.visualViewport.removeEventListener('resize', _vvHandlers[backdropId]);
+      window.visualViewport.removeEventListener('scroll', _vvHandlers[backdropId]);
+    }
+    var bd = document.getElementById(backdropId);
+    if(bd){
+      bd.style.position = '';
+      bd.style.left = bd.style.top = bd.style.width = bd.style.height = '';
+      bd.style.transform = '';
+      bd.style.transformOrigin = '';
+      bd.classList.remove('vvp-scaled');
+    }
+    delete _vvHandlers[backdropId];
+  }
+  // Restaurar el scroll original del árbol
+  if(_savedScroll){
+    // pequeño defer para que el meta viewport ya se haya restaurado
+    var sx = _savedScroll.x, sy = _savedScroll.y;
+    setTimeout(function(){ window.scrollTo(sx, sy); }, 20);
+    _savedScroll = null;
+  }
+}
+function resetPageZoom(){ lockPageZoom(); } // alias antiguo
+
+// ═══════════════════════════════════════════════════
+// DUAL DATE INPUT
+// ═══════════════════════════════════════════════════
+function triggerDatePicker(calId){
+  var el = document.getElementById(calId);
+  if(!el) return;
+  try { if(el.showPicker){ el.showPicker(); return; } } catch(e){}
+  el.focus(); el.click();
+}
+function dateFieldHTML(fieldId, isoValue, label){
+  var display = isoToDisplay(isoValue);
+  return '<div class="date-field"><label>'+label+'</label>'
+    + '<div class="date-inputs">'
+    + '<input class="date-text" type="text" id="'+fieldId+'-txt" value="'+esc(display)+'" placeholder="dd/mm/aaaa" oninput="syncDateFromText(\''+fieldId+'\')" onblur="syncDateFromText(\''+fieldId+'\')">'
+    + '<div class="date-cal" onclick="triggerDatePicker(\''+fieldId+'-cal\')"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+    + '<input type="date" id="'+fieldId+'-cal" value="'+esc(isoValue)+'" tabindex="-1" oninput="syncDateFromCal(\''+fieldId+'\')"></div>'
+    + '</div><div class="date-hint" id="'+fieldId+'-hint"></div></div>';
+}
+function syncDateFromText(fid){
+  var txtEl = document.getElementById(fid+'-txt');
+  var hintEl = document.getElementById(fid+'-hint');
+  var txt = txtEl.value.trim();
+  if(!txt){ txtEl.className='date-text'; hintEl.textContent=''; hintEl.className='date-hint'; return; }
+  var iso = displayToIso(txt);
+  if(iso===null){
+    txtEl.className='date-text err';
+    hintEl.textContent='Formato no válido. Usa dd/mm/aaaa';
+    hintEl.className='date-hint err-msg';
+    document.getElementById(fid+'-cal').value='';
+  } else {
+    txtEl.className='date-text ok'; hintEl.textContent=''; hintEl.className='date-hint';
+    document.getElementById(fid+'-cal').value=iso;
+  }
+}
+function syncDateFromCal(fid){
+  var iso = document.getElementById(fid+'-cal').value;
+  var txtEl = document.getElementById(fid+'-txt');
+  txtEl.value = isoToDisplay(iso);
+  txtEl.className = iso ? 'date-text ok' : 'date-text';
+  var h = document.getElementById(fid+'-hint'); h.textContent=''; h.className='date-hint';
+}
+function getDateFieldValue(fid){
+  var el = document.getElementById(fid+'-txt');
+  if(!el) return '';
+  var txt = el.value.trim();
+  if(!txt) return '';
+  var iso = displayToIso(txt);
+  return iso || '';
+}
+
+// ═══════════════════════════════════════════════════
+// VALIDADOR DE PUEBLOS (Nominatim / OpenStreetMap)
+// ═══════════════════════════════════════════════════
+var townTimers = {};
+function townFieldHTML(fieldId, value, label){
+  return '<div class="town-field"><label>'+label+'</label>'
+    + '<input type="text" id="'+fieldId+'" value="'+esc(value)+'" placeholder="Pueblo / municipio" oninput="townInput(\''+fieldId+'\')" autocomplete="off">'
+    + '<div class="town-suggest" id="'+fieldId+'-sg"></div>'
+    + '<div class="town-status" id="'+fieldId+'-st"></div></div>';
+}
+function townInput(fid){
+  var q = document.getElementById(fid).value.trim();
+  var st = document.getElementById(fid+'-st');
+  var sg = document.getElementById(fid+'-sg');
+  sg.className='town-suggest'; sg.innerHTML='';
+  if(townTimers[fid]) clearTimeout(townTimers[fid]);
+  if(q.length<3){ st.textContent=''; st.className='town-status'; return; }
+
+  // primero: sugerir pueblos ya usados en el árbol (consistencia)
+  var used = usedTowns();
+  var local = used.filter(function(t){ return t.toLowerCase().indexOf(q.toLowerCase())>=0 && t!==q; });
+
+  st.textContent='Buscando...'; st.className='town-status checking';
+  townTimers[fid] = setTimeout(function(){
+    fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=es&limit=4&q='+encodeURIComponent(q))
+      .then(function(r){ return r.json(); })
+      .then(function(results){
+        var opts = '';
+        for(var i=0;i<local.length && i<2;i++){
+          opts += '<div class="town-opt" onclick="pickTown(\''+fid+'\',\''+esc(local[i]).replace(/'/g,"\\'")+'\')">'+esc(local[i])+'<div class="town-detail">Ya usado en tu árbol</div></div>';
+        }
+        var found = false;
+        for(var j=0;j<results.length;j++){
+          var r = results[j];
+          var name = r.display_name.split(',')[0];
+          var detail = r.display_name.split(',').slice(1,3).join(',').trim();
+          opts += '<div class="town-opt" onclick="pickTown(\''+fid+'\',\''+esc(name).replace(/'/g,"\\'")+'\')">'+esc(name)+'<div class="town-detail">'+esc(detail)+'</div></div>';
+          if(name.toLowerCase()===q.toLowerCase()) found=true;
+        }
+        if(opts){ sg.innerHTML=opts; sg.className='town-suggest open'; }
+        if(found || local.indexOf(q)>=0){
+          st.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:.25rem"><polyline points="5 12 10 17 19 7"/></svg>Municipio verificado'; st.className='town-status ok';
+        } else if(results.length){
+          st.textContent='Selecciona una sugerencia para evitar errores de escritura'; st.className='town-status warn';
+        } else {
+          st.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:.2rem"><path d="M12 3l10 18H2L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17.5" r=".7" fill="currentColor" stroke="none"/></svg>No encontrado en OpenStreetMap — revisa la escritura'; st.className='town-status warn';
+        }
+      })
+      .catch(function(){
+        st.textContent='Sin conexión al validador (se guardará igualmente)'; st.className='town-status';
+      });
+  }, 600);
+}
+function pickTown(fid, name){
+  document.getElementById(fid).value = name;
+  var sg = document.getElementById(fid+'-sg'); sg.className='town-suggest'; sg.innerHTML='';
+  var st = document.getElementById(fid+'-st'); st.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:.25rem"><polyline points="5 12 10 17 19 7"/></svg>Municipio verificado'; st.className='town-status ok';
+}
+function usedTowns(){
+  var set = {};
+  for(var id in nodes){
+    var n = nodes[id];
+    if(n.birthPlace) set[n.birthPlace]=1;
+    if(n.fatherOrigin) set[n.fatherOrigin]=1;
+    if(n.motherOrigin) set[n.motherOrigin]=1;
+  }
+  return Object.keys(set).sort();
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL PERFIL
+// ═══════════════════════════════════════════════════
+var editingId = null;
+
+function openModal(id){
+  var n = nodes[id];
+  if(!n || !n.unlocked) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = displayName(n) || n.role;
+  document.getElementById('modal-sub').textContent = 'Generación '+n.gen+' — '+n.role;
+
+  var warnings = checkSurnameIncongruences(id);
+  var bannerHTML = warnings.length ? '<div class="incon-banner"><div class="incon-banner-title"><svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:.2rem"><path d="M12 3l10 18H2L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17.5" r=".7" fill="currentColor" stroke="none"/></svg> Posible incongruencia en apellidos</div>'
+    + warnings.map(function(w){return '<div class="incon-item">'+w+'</div>';}).join('')
+    + '<div style="font-size:.62rem;color:#7a5500;margin-top:.35rem;font-style:italic">Puede ser cambio voluntario, adopción o error de transcripción.</div></div>' : '';
+
+  var conflictHTML = n.rangeConflict ? '<div class="conflict-banner"><svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:.2rem"><path d="M12 3l10 18H2L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17.5" r=".7" fill="currentColor" stroke="none"/></svg> <strong>Datos inconexos:</strong> los rangos calculados desde distintas actas (hijo/a y hermanos) no se solapan. Es habitual: antiguamente las edades declaradas eran imprecisas. Se muestra el rango envolvente más amplio.</div>' : '';
+
+  var sugFatherS1 = n.fatherSurname1 || n.surname1 || '';
+  var sugMotherS1 = n.motherSurname1 || n.surname2 || '';
+
+  var sibList = sibs[id] || [];
+  var sibHTML = '';
+  for(var i=0;i<sibList.length;i++){
+    var s = sibList[i];
+    sibHTML += '<div class="sib-item" onclick="openSibModal(\''+id+'\','+i+')">'
+      + '<div><strong>'+esc([s.firstName,s.surname1,s.surname2].filter(Boolean).join(' ')||'(sin nombre)')+'</strong>'
+      + (s.officialName?' <span class="sib-meta">— en acta: '+esc(s.officialName)+'</span>':'')
+      + '<div class="sib-meta">'+(s.birthDateExact?'Nac. '+fmtShort(s.birthDateExact):'Sin fecha')
+      + (s.fatherAge?' · padre '+s.fatherAge+' años':'')+(s.motherAge?' · madre '+s.motherAge+' años':'')+'</div></div>'
+      + '<button class="sib-del" onclick="event.stopPropagation();delSibling(\''+id+'\','+i+')" aria-label="Eliminar"><svg viewBox="0 0 24 24" width="12" height="12" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;display:block;margin:0 auto"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button></div>';
+  }
+
+  var rangoInfo = '';
+  if(!n.birthDateExact && n.birthRangeFrom){
+    rangoInfo = '<div style="font-size:.7rem;color:var(--amber);margin:.2rem 0 .5rem"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--amber);width:.95em;height:.95em"><line x1="6" y1="3" x2="18" y2="3"/><line x1="6" y1="21" x2="18" y2="21"/><path d="M7 3v3c0 1 .4 1.8 1.2 2.4l3.8 2.6 3.8-2.6c.8-.6 1.2-1.4 1.2-2.4V3"/><path d="M7 21v-3c0-1 .4-1.8 1.2-2.4l3.8-2.6 3.8 2.6c.8.6 1.2 1.4 1.2 2.4v3"/></svg> Rango estimado: del <strong>'+fmtES(n.birthRangeFrom)+'</strong> al <strong>'+fmtES(n.birthRangeTo)+'</strong>'
+      + (n.rangeConflict?' <span style="color:var(--rust)">(envolvente por conflicto)</span>':'')+'</div>';
+  }
+
+  document.getElementById('modal-body').innerHTML =
+    bannerHTML + conflictHTML +
+    '<div class="fsec"><div class="fsec-title">'+ic('idcard')+'Identidad</div>'
+    + '<div class="frow c1"><div><label>Nombre de pila (conocido)</label><input type="text" id="fi-firstName" value="'+esc(n.firstName)+'"></div></div>'
+    + '<div class="frow"><div><label>1° Apellido</label><input type="text" id="fi-surname1" value="'+esc(n.surname1)+'"></div>'
+    + '<div><label>2° Apellido</label><input type="text" id="fi-surname2" value="'+esc(n.surname2)+'"></div></div>'
+    + '<div class="frow"><div><label>Nombre oficial en acta</label><input type="text" id="fi-officialName" value="'+esc(n.officialName)+'" placeholder="Si difiere del conocido"></div>'
+    + '<div><label>Alias / apodo</label><input type="text" id="fi-alias" value="'+esc(n.alias)+'"></div></div>'
+    + '<div class="frow c13"><div><label>Sexo</label><select id="fi-sex">'
+    + '<option value=""'+(!n.sex?' selected':'')+'>—</option>'
+    + '<option value="V"'+(n.sex==='V'?' selected':'')+'>Varón</option>'
+    + '<option value="M"'+(n.sex==='M'?' selected':'')+'>Mujer</option></select></div>'
+    + '<div style="display:flex;align-items:flex-end;font-size:.62rem;color:var(--fog-lt);padding-bottom:.3rem">Ej.: Robustiana figuraba como «Marta» en su acta → nombre oficial: Marta</div></div>'
+    + '</div>'
+
+    + '<div class="fsec"><div class="fsec-title">'+ic('calendar')+'Nacimiento</div>'
+    + rangoInfo
+    + '<div class="frow"><div>'+dateFieldHTML('fi-birthDate', n.birthDateExact, 'Fecha exacta (= acta obtenida)')+'</div>'
+    + '<div>'+townFieldHTML('fi-birthPlace', n.birthPlace, 'Lugar de nacimiento')+'</div></div>'
+    + '<div class="frow"><div>'+dateFieldHTML('fi-baptismDate', n.baptismDate, 'Bautismo (fecha)')+'</div>'
+    + '<div><label>Parroquia de bautismo</label><input type="text" id="fi-baptismPlace" value="'+esc(n.baptismPlace)+'"></div></div>'
+    + '<div class="check-row">'
+    + '<label class="check-item"><input type="checkbox" id="fi-negReg"'+(n.negRegistro?' checked':'')+'> Negativa en registro civil</label>'
+    + '<label class="check-item"><input type="checkbox" id="fi-negPar"'+(n.negParroquia?' checked':'')+'> Negativa en parroquia</label>'
+    + '</div></div>'
+
+    + '<div class="fsec"><div class="fsec-title">'+ic('cross')+'Defunción (si se conoce)</div>'
+    + (n.deathRangeTo && !n.deathDate ? '<div style="font-size:.7rem;color:var(--fog);margin-bottom:.4rem"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--amber);width:.95em;height:.95em"><line x1="6" y1="3" x2="18" y2="3"/><line x1="6" y1="21" x2="18" y2="21"/><path d="M7 3v3c0 1 .4 1.8 1.2 2.4l3.8 2.6 3.8-2.6c.8-.6 1.2-1.4 1.2-2.4V3"/><path d="M7 21v-3c0-1 .4-1.8 1.2-2.4l3.8-2.6 3.8 2.6c.8.6 1.2 1.4 1.2 2.4v3"/></svg> Falleció antes del <strong>'+fmtES(n.deathRangeTo)+'</strong> (inferido por marcas «difunto» en actas de descendientes).</div>' : '')
+    + '<div class="frow"><div>'+dateFieldHTML('fi-deathDate', n.deathDate, 'Fecha exacta de defunción')+'</div>'
+    + '<div>'+townFieldHTML('fi-deathPlace', n.deathPlace||'', 'Lugar de defunción')+'</div></div></div>'
+
+    + '<div class="fsec"><div class="fsec-title">'+ic('user')+'Padre — según este acta</div>'
+    + '<div style="font-size:.64rem;color:var(--fog);margin-bottom:.45rem;font-style:italic">1° Apellido sugerido: «'+esc(sugFatherS1||'?')+'»</div>'
+    + '<div class="frow c3"><div><label>Nombre</label><input type="text" id="fi-fFN" value="'+esc(n.fatherFirstName)+'"></div>'
+    + '<div><label>1° Apellido</label><input type="text" id="fi-fS1" value="'+esc(sugFatherS1)+'"></div>'
+    + '<div><label>2° Apellido</label><input type="text" id="fi-fS2" value="'+esc(n.fatherSurname2)+'"></div></div>'
+    + '<div class="frow"><div><label>Edad en esta acta</label><input type="number" id="fi-fAge" value="'+(n.fatherAge||'')+'" min="14" max="95"></div>'
+    + '<div style="display:flex;align-items:flex-end;padding-bottom:.35rem"><label class="check-item"><input type="checkbox" id="fi-fDec"'+(n.fatherDeceased?' checked':'')+'> Difunto al nacimiento</label></div></div>'
+    + '<div class="frow c1"><div>'+townFieldHTML('fi-fOrigin', n.fatherOrigin, 'Pueblo de origen')+'</div></div></div>'
+
+    + '<div class="fsec"><div class="fsec-title">'+ic('user')+'Madre — según este acta</div>'
+    + '<div style="font-size:.64rem;color:var(--fog);margin-bottom:.45rem;font-style:italic">1° Apellido sugerido: «'+esc(sugMotherS1||'?')+'»</div>'
+    + '<div class="frow c3"><div><label>Nombre</label><input type="text" id="fi-mFN" value="'+esc(n.motherFirstName)+'"></div>'
+    + '<div><label>1° Apellido</label><input type="text" id="fi-mS1" value="'+esc(sugMotherS1)+'"></div>'
+    + '<div><label>2° Apellido</label><input type="text" id="fi-mS2" value="'+esc(n.motherSurname2)+'"></div></div>'
+    + '<div class="frow"><div><label>Edad en esta acta</label><input type="number" id="fi-mAge" value="'+(n.motherAge||'')+'" min="14" max="65"></div>'
+    + '<div style="display:flex;align-items:flex-end;padding-bottom:.35rem"><label class="check-item"><input type="checkbox" id="fi-mDec"'+(n.motherDeceased?' checked':'')+'> Difunta al nacimiento</label></div></div>'
+    + '<div class="frow c1"><div>'+townFieldHTML('fi-mOrigin', n.motherOrigin, 'Pueblo de origen')+'</div></div></div>'
+
+    + grandparentSec('Abuelos paternos — si constan', 'pgf','pgm', n)
+    + grandparentSec('Abuelos maternos — si constan', 'mgf','mgm', n)
+
+    + '<div class="fsec"><div class="fsec-title">'+ic('couple')+'Hermanos/as documentados</div>'
+    + '<div style="font-size:.64rem;color:var(--fog);margin-bottom:.45rem;font-style:italic">Las actas de hermanos citan a los mismos padres con sus edades → ayudan a triangular y afinar los rangos de nacimiento de los padres.</div>'
+    + '<div class="sib-list">'+sibHTML+'</div>'
+    + '<button class="add-sib-btn" onclick="openSibModal(\''+id+'\',-1)">+ Añadir hermano/a</button></div>'
+
+    + '<div class="fsec"><div class="fsec-title">'+ic('notes')+'Notas</div>'
+    + '<div class="frow c1"><div><label>Observaciones / historial de solicitudes</label>'
+    + '<textarea id="fi-notes">'+esc(n.notes)+'</textarea></div></div></div>';
+
+  lockPageZoom('modal-bd');
+  document.getElementById('modal-bd').className='modal-backdrop open';
+}
+
+function grandparentSec(title, kf, km, n){
+  return '<div class="fsec"><div class="fsec-title">'+ic('couple')+' '+title+'</div>'
+    + '<div class="frow c3"><div><label>Abuelo — nombre</label><input type="text" id="fi-'+kf+'FN" value="'+esc(n[kf+'First'])+'"></div>'
+    + '<div><label>1° Apellido</label><input type="text" id="fi-'+kf+'S1" value="'+esc(n[kf+'Sur1'])+'"></div>'
+    + '<div><label>2° Apellido</label><input type="text" id="fi-'+kf+'S2" value="'+esc(n[kf+'Sur2'])+'"></div></div>'
+    + '<div class="frow"><div><label>Edad (si consta)</label><input type="number" id="fi-'+kf+'Age" value="'+(n[kf+'Age']||'')+'" min="14" max="120"></div>'
+    + '<div style="display:flex;align-items:flex-end;padding-bottom:.35rem"><label class="check-item"><input type="checkbox" id="fi-'+kf+'Dec"'+(n[kf+'Deceased']?' checked':'')+'> Difunto al nacimiento</label></div></div>'
+    + '<div class="frow c1"><div>'+townFieldHTML('fi-'+kf+'Origin', n[kf+'Origin']||'', 'Pueblo de origen (si consta)')+'</div></div>'
+    + '<div class="frow c3"><div><label>Abuela — nombre</label><input type="text" id="fi-'+km+'FN" value="'+esc(n[km+'First'])+'"></div>'
+    + '<div><label>1° Apellido</label><input type="text" id="fi-'+km+'S1" value="'+esc(n[km+'Sur1'])+'"></div>'
+    + '<div><label>2° Apellido</label><input type="text" id="fi-'+km+'S2" value="'+esc(n[km+'Sur2'])+'"></div></div>'
+    + '<div class="frow"><div><label>Edad (si consta)</label><input type="number" id="fi-'+km+'Age" value="'+(n[km+'Age']||'')+'" min="14" max="120"></div>'
+    + '<div style="display:flex;align-items:flex-end;padding-bottom:.35rem"><label class="check-item"><input type="checkbox" id="fi-'+km+'Dec"'+(n[km+'Deceased']?' checked':'')+'> Difunta al nacimiento</label></div></div>'
+    + '<div class="frow c1"><div>'+townFieldHTML('fi-'+km+'Origin', n[km+'Origin']||'', 'Pueblo de origen (si consta)')+'</div></div>'
+    + '</div>';
+}
+
+function closeModal(){
+  document.getElementById('modal-bd').className='modal-backdrop';
+  unlockPageZoom('modal-bd');
+  editingId = null;
+}
+
+function v(id){ var el=document.getElementById(id); return el&&el.value?el.value.trim():''; }
+function vi(id){ var el=document.getElementById(id); return el&&el.value?(parseInt(el.value,10)||null):null; }
+function vc(id){ var el=document.getElementById(id); return !!(el&&el.checked); }
+
+function saveData(){
+  if(!editingId) return;
+  var n = nodes[editingId];
+  n.firstName=v('fi-firstName'); n.surname1=v('fi-surname1'); n.surname2=v('fi-surname2');
+  n.officialName=v('fi-officialName'); n.alias=v('fi-alias'); n.sex=v('fi-sex');
+  n.birthDateExact=getDateFieldValue('fi-birthDate');
+  n.birthPlace=v('fi-birthPlace');
+  n.baptismDate=getDateFieldValue('fi-baptismDate');
+  n.baptismPlace=v('fi-baptismPlace');
+  n.negRegistro=vc('fi-negReg'); n.negParroquia=vc('fi-negPar');
+  n.deathDate=getDateFieldValue('fi-deathDate');
+  n.deathPlace=v('fi-deathPlace');
+  if(n.deathDate){ n.deathRangeTo = n.deathDate; }
+  if(n.birthDateExact){ n.birthRangeFrom=n.birthDateExact; n.birthRangeTo=n.birthDateExact; n.rangeConflict=false; n.certRequestedAt=null; }
+  n.fatherFirstName=v('fi-fFN'); n.fatherSurname1=v('fi-fS1'); n.fatherSurname2=v('fi-fS2');
+  n.fatherAge=vi('fi-fAge'); n.fatherOrigin=v('fi-fOrigin'); n.fatherDeceased=vc('fi-fDec');
+  n.motherFirstName=v('fi-mFN'); n.motherSurname1=v('fi-mS1'); n.motherSurname2=v('fi-mS2');
+  n.motherAge=vi('fi-mAge'); n.motherOrigin=v('fi-mOrigin'); n.motherDeceased=vc('fi-mDec');
+  var gps=['pgf','pgm','mgf','mgm'];
+  for(var i=0;i<4;i++){
+    var k=gps[i];
+    n[k+'First']=v('fi-'+k+'FN'); n[k+'Sur1']=v('fi-'+k+'S1'); n[k+'Sur2']=v('fi-'+k+'S2');
+    n[k+'Age']=vi('fi-'+k+'Age'); n[k+'Origin']=v('fi-'+k+'Origin'); n[k+'Deceased']=vc('fi-'+k+'Dec');
+  }
+  n.notes=v('fi-notes');
+
+  propagate(editingId);
+  var savedId = editingId;
+  closeModal();
+  renderAll();
+  persistNode(savedId);
+  persistNode(savedId+'p'); persistNode(savedId+'m');
+  persistNode(savedId+'pp'); persistNode(savedId+'pm');
+  persistNode(savedId+'mp'); persistNode(savedId+'mm');
+  // Si el formulario tiene info de abuelos también, los nodos abuelos pueden
+  // haberse modificado: ya están en la lista de persistNode anteriores.
+  saveLocal();
+  toast('Datos guardados');
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL HERMANOS
+// ═══════════════════════════════════════════════════
+var sibEditing = {ancestor:null, index:-1};
+
+function openSibModal(ancestorId, index){
+  sibEditing = {ancestor:ancestorId, index:index};
+  var anc = nodes[ancestorId];
+  var s = (index>=0 && sibs[ancestorId]) ? sibs[ancestorId][index] : makeSibling();
+  document.getElementById('sib-title').textContent = index>=0 ? 'Editar hermano/a' : 'Nuevo hermano/a';
+  document.getElementById('sib-sub').textContent = 'Hermano/a de '+(displayName(anc)||anc.role)+' — mismos padres';
+
+  // valores sugeridos heredados del ancestro: apellidos esperados y datos de
+  // padres / abuelos comunes (que ya pueden estar parcialmente rellenados en el ancestro).
+  var sugS1 = s.surname1 || anc.surname1 || '';
+  var sugS2 = s.surname2 || anc.surname2 || '';
+  var sugFAge = s.fatherAge || anc.fatherAge || '';
+  var sugMAge = s.motherAge || anc.motherAge || '';
+  var sugFFN = s.fatherFirstName || anc.fatherFirstName || '';
+  var sugFS1 = s.fatherSurname1 || anc.fatherSurname1 || '';
+  var sugFS2 = s.fatherSurname2 || anc.fatherSurname2 || '';
+  var sugFOr = s.fatherOrigin || anc.fatherOrigin || '';
+  var sugMFN = s.motherFirstName || anc.motherFirstName || '';
+  var sugMS1 = s.motherSurname1 || anc.motherSurname1 || '';
+  var sugMS2 = s.motherSurname2 || anc.motherSurname2 || '';
+  var sugMOr = s.motherOrigin || anc.motherOrigin || '';
+
+  document.getElementById('sib-body').innerHTML =
+    '<div class="fsec"><div class="fsec-title">'+ic('idcard')+'Identidad</div>'
+    + '<div class="frow c1"><div><label>Nombre conocido</label><input type="text" id="si-firstName" value="'+esc(s.firstName)+'"></div></div>'
+    + '<div class="frow"><div><label>1° Apellido</label><input type="text" id="si-surname1" value="'+esc(sugS1)+'"></div>'
+    + '<div><label>2° Apellido</label><input type="text" id="si-surname2" value="'+esc(sugS2)+'"></div></div>'
+    + '<div class="frow"><div><label>Nombre oficial en acta</label><input type="text" id="si-officialName" value="'+esc(s.officialName)+'" placeholder="Si difiere"></div>'
+    + '<div><label>Sexo</label><select id="si-sex"><option value=""'+(!s.sex?' selected':'')+'>—</option>'
+    + '<option value="V"'+(s.sex==='V'?' selected':'')+'>Varón</option>'
+    + '<option value="M"'+(s.sex==='M'?' selected':'')+'>Mujer</option></select></div></div></div>'
+
+    + '<div class="fsec"><div class="fsec-title">'+ic('calendar')+'Nacimiento (de su acta)</div>'
+    + '<div class="frow"><div>'+dateFieldHTML('si-birthDate', s.birthDateExact, 'Fecha exacta (= acta obtenida)')+'</div>'
+    + '<div>'+townFieldHTML('si-birthPlace', s.birthPlace||anc.birthPlace||'', 'Lugar de nacimiento')+'</div></div>'
+    + '<div class="frow"><div>'+dateFieldHTML('si-baptismDate', s.baptismDate, 'Bautismo (fecha)')+'</div>'
+    + '<div><label>Parroquia de bautismo</label><input type="text" id="si-baptismPlace" value="'+esc(s.baptismPlace||'')+'"></div></div>'
+    + '<div class="check-row">'
+    + '<label class="check-item"><input type="checkbox" id="si-negReg"'+(s.negRegistro?' checked':'')+'> Negativa en registro civil</label>'
+    + '<label class="check-item"><input type="checkbox" id="si-negPar"'+(s.negParroquia?' checked':'')+'> Negativa en parroquia</label>'
+    + '</div></div>'
+
+    + '<div class="fsec"><div class="fsec-title">'+ic('user')+'Padre — según el acta del hermano/a</div>'
+    + '<div style="font-size:.62rem;color:var(--fog);font-style:italic;margin-bottom:.4rem">Mismos padres que '+esc(displayName(anc)||anc.role)+'. Lo que rellenes aquí se cruza con el resto para triangular fechas y origen.</div>'
+    + '<div class="frow c3"><div><label>Nombre</label><input type="text" id="si-fFN" value="'+esc(sugFFN)+'"></div>'
+    + '<div><label>1° Apellido</label><input type="text" id="si-fS1" value="'+esc(sugFS1)+'"></div>'
+    + '<div><label>2° Apellido</label><input type="text" id="si-fS2" value="'+esc(sugFS2)+'"></div></div>'
+    + '<div class="frow"><div><label>Edad del padre en esta acta</label><input type="number" id="si-fAge" value="'+sugFAge+'" min="14" max="95"></div>'
+    + '<div style="display:flex;align-items:flex-end;padding-bottom:.35rem"><label class="check-item"><input type="checkbox" id="si-fDec"'+(s.fatherDeceased?' checked':'')+'> Difunto al nacimiento</label></div></div>'
+    + '<div class="frow c1"><div>'+townFieldHTML('si-fOrigin', sugFOr, 'Pueblo de origen del padre')+'</div></div></div>'
+
+    + '<div class="fsec"><div class="fsec-title">'+ic('user')+'Madre — según el acta del hermano/a</div>'
+    + '<div class="frow c3"><div><label>Nombre</label><input type="text" id="si-mFN" value="'+esc(sugMFN)+'"></div>'
+    + '<div><label>1° Apellido</label><input type="text" id="si-mS1" value="'+esc(sugMS1)+'"></div>'
+    + '<div><label>2° Apellido</label><input type="text" id="si-mS2" value="'+esc(sugMS2)+'"></div></div>'
+    + '<div class="frow"><div><label>Edad de la madre en esta acta</label><input type="number" id="si-mAge" value="'+sugMAge+'" min="14" max="65"></div>'
+    + '<div style="display:flex;align-items:flex-end;padding-bottom:.35rem"><label class="check-item"><input type="checkbox" id="si-mDec"'+(s.motherDeceased?' checked':'')+'> Difunta al nacimiento</label></div></div>'
+    + '<div class="frow c1"><div>'+townFieldHTML('si-mOrigin', sugMOr, 'Pueblo de origen de la madre')+'</div></div></div>'
+
+    + grandparentSib('Abuelos paternos — si constan', 'pgf','pgm', s, anc)
+    + grandparentSib('Abuelos maternos — si constan', 'mgf','mgm', s, anc)
+
+    + '<div class="fsec"><div class="fsec-title">'+ic('notes')+'Notas</div>'
+    + '<div class="frow c1"><div><textarea id="si-notes">'+esc(s.notes)+'</textarea></div></div></div>';
+
+  lockPageZoom('sib-bd');
+  document.getElementById('sib-bd').className='modal-backdrop open';
+}
+
+function grandparentSib(title, kf, km, s, anc){
+  // valor heredado del ancestro si el hermano no lo tiene
+  function inh(field, ancField){ return s[field] || anc[ancField||field] || ''; }
+  function inhAge(field){ return s[field] || anc[field] || ''; }
+  function inhBool(field){ return s[field] || anc[field] || false; }
+  return '<div class="fsec"><div class="fsec-title">'+ic('couple')+' '+title+'</div>'
+    + '<div class="frow c3"><div><label>Abuelo — nombre</label><input type="text" id="si-'+kf+'FN" value="'+esc(inh(kf+'First'))+'"></div>'
+    + '<div><label>1° Apellido</label><input type="text" id="si-'+kf+'S1" value="'+esc(inh(kf+'Sur1'))+'"></div>'
+    + '<div><label>2° Apellido</label><input type="text" id="si-'+kf+'S2" value="'+esc(inh(kf+'Sur2'))+'"></div></div>'
+    + '<div class="frow"><div><label>Edad (si consta)</label><input type="number" id="si-'+kf+'Age" value="'+inhAge(kf+'Age')+'" min="14" max="120"></div>'
+    + '<div style="display:flex;align-items:flex-end;padding-bottom:.35rem"><label class="check-item"><input type="checkbox" id="si-'+kf+'Dec"'+(inhBool(kf+'Deceased')?' checked':'')+'> Difunto al nacimiento</label></div></div>'
+    + '<div class="frow c1"><div>'+townFieldHTML('si-'+kf+'Origin', inh(kf+'Origin'), 'Pueblo de origen')+'</div></div>'
+    + '<div class="frow c3"><div><label>Abuela — nombre</label><input type="text" id="si-'+km+'FN" value="'+esc(inh(km+'First'))+'"></div>'
+    + '<div><label>1° Apellido</label><input type="text" id="si-'+km+'S1" value="'+esc(inh(km+'Sur1'))+'"></div>'
+    + '<div><label>2° Apellido</label><input type="text" id="si-'+km+'S2" value="'+esc(inh(km+'Sur2'))+'"></div></div>'
+    + '<div class="frow"><div><label>Edad (si consta)</label><input type="number" id="si-'+km+'Age" value="'+inhAge(km+'Age')+'" min="14" max="120"></div>'
+    + '<div style="display:flex;align-items:flex-end;padding-bottom:.35rem"><label class="check-item"><input type="checkbox" id="si-'+km+'Dec"'+(inhBool(km+'Deceased')?' checked':'')+'> Difunta al nacimiento</label></div></div>'
+    + '<div class="frow c1"><div>'+townFieldHTML('si-'+km+'Origin', inh(km+'Origin'), 'Pueblo de origen')+'</div></div>'
+    + '</div>';
+}
+function closeSibModal(){
+  document.getElementById('sib-bd').className='modal-backdrop';
+  unlockPageZoom('sib-bd');
+  sibEditing={ancestor:null,index:-1};
+}
+function saveSibData(){
+  var aid = sibEditing.ancestor;
+  if(!aid) return;
+  if(!sibs[aid]) sibs[aid]=[];
+  var s = sibEditing.index>=0 ? sibs[aid][sibEditing.index] : makeSibling();
+  s.firstName=v('si-firstName'); s.surname1=v('si-surname1'); s.surname2=v('si-surname2');
+  s.officialName=v('si-officialName'); s.sex=v('si-sex');
+  s.birthDateExact=getDateFieldValue('si-birthDate');
+  s.birthPlace=v('si-birthPlace');
+  s.baptismDate=getDateFieldValue('si-baptismDate');
+  s.baptismPlace=v('si-baptismPlace');
+  s.negRegistro=vc('si-negReg'); s.negParroquia=vc('si-negPar');
+  s.fatherFirstName=v('si-fFN'); s.fatherSurname1=v('si-fS1'); s.fatherSurname2=v('si-fS2');
+  s.fatherAge=vi('si-fAge'); s.fatherOrigin=v('si-fOrigin'); s.fatherDeceased=vc('si-fDec');
+  s.motherFirstName=v('si-mFN'); s.motherSurname1=v('si-mS1'); s.motherSurname2=v('si-mS2');
+  s.motherAge=vi('si-mAge'); s.motherOrigin=v('si-mOrigin'); s.motherDeceased=vc('si-mDec');
+  var gps=['pgf','pgm','mgf','mgm'];
+  for(var i=0;i<4;i++){
+    var k=gps[i];
+    s[k+'First']=v('si-'+k+'FN'); s[k+'Sur1']=v('si-'+k+'S1'); s[k+'Sur2']=v('si-'+k+'S2');
+    s[k+'Age']=vi('si-'+k+'Age'); s[k+'Origin']=v('si-'+k+'Origin'); s[k+'Deceased']=vc('si-'+k+'Dec');
+  }
+  s.notes=v('si-notes');
+  if(sibEditing.index<0) sibs[aid].push(s);
+
+  // Propagar info del hermano al ancestro y a sus padres/abuelos comunes.
+  // Si el hermano aporta datos nuevos sobre los padres (origen, edad) o
+  // abuelos (nombres, edad, origen) que el ancestro no tenía, los copiamos.
+  var anc = nodes[aid];
+  var fieldsCommon = [
+    'fatherFirstName','fatherSurname1','fatherSurname2','fatherOrigin',
+    'motherFirstName','motherSurname1','motherSurname2','motherOrigin'
+  ];
+  for(var fc=0; fc<fieldsCommon.length; fc++){
+    var fld = fieldsCommon[fc];
+    if(s[fld] && !anc[fld]) anc[fld] = s[fld];
+  }
+  var fieldsAge = ['fatherAge','motherAge'];
+  for(var fa=0; fa<fieldsAge.length; fa++){
+    var f2 = fieldsAge[fa];
+    if(s[f2] && anc[f2]==null) anc[f2] = s[f2];
+  }
+  // abuelos comunes
+  for(var gk=0; gk<gps.length; gk++){
+    var kk = gps[gk];
+    if(s[kk+'First']  && !anc[kk+'First'])  anc[kk+'First']  = s[kk+'First'];
+    if(s[kk+'Sur1']   && !anc[kk+'Sur1'])   anc[kk+'Sur1']   = s[kk+'Sur1'];
+    if(s[kk+'Sur2']   && !anc[kk+'Sur2'])   anc[kk+'Sur2']   = s[kk+'Sur2'];
+    if(s[kk+'Origin'] && !anc[kk+'Origin']) anc[kk+'Origin'] = s[kk+'Origin'];
+    if(s[kk+'Age']    && anc[kk+'Age']==null) anc[kk+'Age']  = s[kk+'Age'];
+  }
+
+  // retriangular padres del ancestro y propagar todo
+  propagate(aid);
+  closeSibModal();
+  // reabrir perfil del ancestro actualizado
+  openModal(aid);
+  renderAll();
+  persistNode(aid);
+  persistSiblings(aid);
+  persistNode(aid+'p'); persistNode(aid+'m');
+  persistNode(aid+'pp'); persistNode(aid+'pm');
+  persistNode(aid+'mp'); persistNode(aid+'mm');
+  saveLocal();
+  toast('Hermano/a guardado');
+}
+function delSibling(aid, idx){
+  if(!confirm('¿Eliminar este hermano/a?')) return;
+  sibs[aid].splice(idx,1);
+  propagate(aid);
+  openModal(aid);
+  renderAll();
+  persistSiblings(aid);
+  persistNode(aid+'p'); persistNode(aid+'m');
+  saveLocal();
+}
+
+// ═══════════════════════════════════════════════════
+// IMPORT / EXPORT JSON (fiel a la BBDD: dos apellidos)
+// ═══════════════════════════════════════════════════
+function exportJSON(){
+  var payload = JSON.stringify({version:2, nodes:nodes, sibs:sibs}, null, 2);
+  download('arbol_genealogico.json', payload, 'application/json');
+  toast('JSON exportado');
+}
+function importJSON(){ document.getElementById('import-file').click(); }
+function handleImport(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      var imported = JSON.parse(ev.target.result);
+      var inNodes = imported.nodes || imported; // v2 o formato antiguo plano
+      var inSibs  = imported.sibs || {};
+      for(var k in nodes) delete nodes[k];
+      for(var k2 in sibs) delete sibs[k2];
+      for(var id in inNodes){
+        var nd = inNodes[id];
+        // migración formato antiguo (birthYearFrom números)
+        if(nd.birthYearFrom && !nd.birthRangeFrom){
+          nd.birthRangeFrom = nd.birthYearFrom+'-01-01';
+          nd.birthRangeTo = (nd.birthYearTo||nd.birthYearFrom)+'-12-31';
+        }
+        var base = makeNode(id, nd.parent, nd.unlocked);
+        for(var key in base){ if(nd[key]!==undefined) base[key]=nd[key]; }
+        base.role = roleOf(id);
+        nodes[id]=base;
+      }
+      for(var sid in inSibs) sibs[sid]=inSibs[sid];
+      // Propagar todos los nodos desbloqueados para crear hijos derivados
+      // (p.ej. si Juan tenía `fatherFirstName='Venancio'` pero Venancio no
+      // estaba como nodo, propagate lo crea ahora)
+      var ids = Object.keys(nodes).sort(function(a,b){return a.length-b.length;});
+      for(var ii=0; ii<ids.length; ii++){
+        if(nodes[ids[ii]].unlocked) propagate(ids[ii]);
+      }
+      renderAll();
+      pushAllToCloud();
+      saveLocal();
+      toast('JSON importado: '+Object.keys(nodes).length+' personas');
+    } catch(err){ alert('Error al importar: archivo no válido. '+err.message); }
+    e.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════
+// GEDCOM EXPORT — formato internacional
+// (sin tildes, ñ→n, apellidos concatenados en un solo SURN)
+// ═══════════════════════════════════════════════════
+function intl(s){
+  if(!s) return '';
+  // NFD + quitar diacríticos; ñ→n ya cubierto por NFD (ñ = n + ~)
+  try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); } catch(e){}
+  return s;
+}
+function gedDate(iso){
+  var M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var p=iso.split('-');
+  return parseInt(p[2],10)+' '+M[parseInt(p[1],10)-1]+' '+p[0];
+}
+function exportGEDCOM(){
+  var L=[];
+  var M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var now=new Date();
+  L.push('0 HEAD'); L.push('1 GEDC'); L.push('2 VERS 5.5.5');
+  L.push('1 CHAR UTF-8'); L.push('1 SOUR ArbolGenealogico');
+  L.push('1 DATE '+now.getDate()+' '+M[now.getMonth()]+' '+now.getFullYear());
+
+  function iref(id){ return '@I'+id.replace(/[^a-zA-Z0-9]/g,'X')+'@'; }
+  function fref(id){ return '@F'+id.replace(/[^a-zA-Z0-9]/g,'X')+'@'; }
+
+  for(var id in nodes){
+    var n=nodes[id];
+    if(!n.unlocked) continue;
+    if(!n.firstName && !n.surname1 && !n.birthDateExact && !n.birthRangeFrom) continue;
+    L.push('0 '+iref(id)+' INDI');
+    var surnCat = intl([n.surname1,n.surname2].filter(Boolean).join(' '));
+    var givn = intl(n.firstName);
+    if(givn||surnCat){
+      L.push('1 NAME '+givn+' /'+surnCat+'/');
+      if(givn) L.push('2 GIVN '+givn);
+      if(surnCat) L.push('2 SURN '+surnCat);
+    }
+    if(n.officialName) L.push('1 NAME '+intl(n.officialName)+' /'+surnCat+'/');
+    if(n.alias) L.push('1 NAME '+intl(n.alias));
+    if(n.sex==='V') L.push('1 SEX M');
+    else if(n.sex==='M') L.push('1 SEX F');
+    if(n.birthDateExact || n.birthRangeFrom || n.birthPlace){
+      L.push('1 BIRT');
+      if(n.birthDateExact) L.push('2 DATE '+gedDate(n.birthDateExact));
+      else if(n.birthRangeFrom) L.push('2 DATE BET '+gedDate(n.birthRangeFrom)+' AND '+gedDate(n.birthRangeTo));
+      if(n.birthPlace) L.push('2 PLAC '+intl(n.birthPlace));
+    }
+    if(n.baptismDate||n.baptismPlace){
+      L.push('1 CHR');
+      if(n.baptismDate) L.push('2 DATE '+gedDate(n.baptismDate));
+      if(n.baptismPlace) L.push('2 PLAC '+intl(n.baptismPlace));
+    }
+    if(n.notes){
+      var nls=intl(n.notes).split('\n');
+      L.push('1 NOTE '+nls[0]);
+      for(var x=1;x<nls.length;x++) L.push('2 CONT '+nls[x]);
+    }
+    // FAMC/FAMS
+    if(id!=='0') L.push('1 FAMS '+fref(id.slice(0,-1)));
+    if(nodes[id+'p']||nodes[id+'m']) L.push('1 FAMC '+fref(id));
+  }
+  // FAMs: para cada nodo con padres
+  for(var id2 in nodes){
+    var fId=id2+'p', mId=id2+'m';
+    var fEx = nodes[fId] && nodes[fId].unlocked && (nodes[fId].firstName||nodes[fId].surname1);
+    var mEx = nodes[mId] && nodes[mId].unlocked && (nodes[mId].firstName||nodes[mId].surname1);
+    if(!fEx && !mEx) continue;
+    L.push('0 '+fref(id2)+' FAM');
+    if(fEx) L.push('1 HUSB '+iref(fId));
+    if(mEx) L.push('1 WIFE '+iref(mId));
+    L.push('1 CHIL '+iref(id2));
+  }
+  L.push('0 TRLR');
+  download('arbol_genealogico.ged', L.join('\n'), 'text/plain');
+  toast('GEDCOM exportado (formato internacional)');
+}
+
+// ═══════════════════════════════════════════════════
+// GEDCOM IMPORT
+// ═══════════════════════════════════════════════════
+var gedParsed = null;
+
+function importGEDCOMfile(){ document.getElementById('import-ged').click(); }
+function handleGedImport(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    gedParsed = parseGedcom(ev.target.result);
+    if(!Object.keys(gedParsed.indis).length){ alert('No se encontraron personas en el GEDCOM.'); return; }
+    showGedRootPicker();
+    e.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function parseGedcom(text){
+  var lines = text.split(/\r?\n/);
+  var indis={}, fams={};
+  var cur=null, curType=null, sub=null;
+  for(var i=0;i<lines.length;i++){
+    var ln = lines[i].replace(/^\uFEFF/,'');
+    if(!ln.trim()) continue;
+    var parts = ln.trim().split(' ');
+    var level = parts[0];
+    if(level==='0'){
+      if(parts.length>=3 && parts[2]==='INDI'){
+        var iid=parts[1].replace(/@/g,'');
+        indis[iid]={id:iid,name:'',givn:'',surn:'',sex:'',birt:'',birtplace:'',famc:'',fams:[]};
+        cur=iid; curType='INDI'; sub=null;
+      } else if(parts.length>=3 && parts[2]==='FAM'){
+        var fid=parts[1].replace(/@/g,'');
+        fams[fid]={id:fid,husb:'',wife:'',chil:[]};
+        cur=fid; curType='FAM'; sub=null;
+      } else { cur=null; curType=null; }
+    } else if(curType==='INDI' && cur){
+      var tag=parts[1]; var val=parts.slice(2).join(' ');
+      if(level==='1'){
+        sub=tag;
+        if(tag==='NAME') indis[cur].name=val;
+        else if(tag==='SEX') indis[cur].sex=val;
+        else if(tag==='FAMC') indis[cur].famc=val.replace(/@/g,'');
+        else if(tag==='FAMS') indis[cur].fams.push(val.replace(/@/g,''));
+      } else if(level==='2'){
+        if(tag==='GIVN') indis[cur].givn=val;
+        else if(tag==='SURN') indis[cur].surn=val;
+        else if(tag==='DATE'&&sub==='BIRT') indis[cur].birt=val;
+        else if(tag==='PLAC'&&sub==='BIRT') indis[cur].birtplace=val;
+      }
+    } else if(curType==='FAM' && cur){
+      var tag2=parts[1]; var val2=parts.slice(2).join(' ');
+      if(level==='1'){
+        if(tag2==='HUSB') fams[cur].husb=val2.replace(/@/g,'');
+        else if(tag2==='WIFE') fams[cur].wife=val2.replace(/@/g,'');
+        else if(tag2==='CHIL') fams[cur].chil.push(val2.replace(/@/g,''));
+      }
+    }
+  }
+  return {indis:indis, fams:fams};
+}
+
+function gedDisplayName(p){
+  if(p.givn||p.surn) return (p.givn+' '+p.surn).trim();
+  return p.name.replace(/\//g,'').trim();
+}
+
+function showGedRootPicker(){
+  document.getElementById('ged-search').value='';
+  filterGedList();
+  lockPageZoom('ged-bd');
+  document.getElementById('ged-bd').className='modal-backdrop open';
+}
+function closeGedModal(){ document.getElementById('ged-bd').className='modal-backdrop'; unlockPageZoom('ged-bd'); }
+
+// ═══════════════════════════════════════════════════
+// MODAL CONFIGURACIÓN
+// ═══════════════════════════════════════════════════
+function openSettings(){
+  // Rellena la sección de cuenta con el email logado / modo local
+  var acc = document.getElementById('settings-account');
+  var btn = document.getElementById('settings-logout-btn');
+  if(currentUser && currentUser.email){
+    acc.innerHTML = '<div><strong>'+esc(currentUser.email)+'</strong></div>'
+      + '<div style="font-size:.7rem;color:var(--fog);margin-top:.1rem">Sesión activa — los cambios se sincronizan con la nube'+(navigator.onLine?'':' (sin conexión: pendientes)')+'</div>';
+    btn.style.display = '';
+  } else if(localMode){
+    acc.innerHTML = '<div><strong>Modo local</strong></div>'
+      + '<div style="font-size:.7rem;color:var(--fog);margin-top:.1rem">Sin cuenta: los datos viven en este dispositivo (localStorage)</div>';
+    btn.style.display = 'none';
+  } else {
+    acc.innerHTML = '<div style="color:var(--fog);font-style:italic">No conectado</div>';
+    btn.style.display = 'none';
+  }
+  lockPageZoom('settings-bd');
+  document.getElementById('settings-bd').className='modal-backdrop open';
+}
+function closeSettings(){
+  document.getElementById('settings-bd').className='modal-backdrop';
+  unlockPageZoom('settings-bd');
+}
+
+function filterGedList(){
+  var q = document.getElementById('ged-search').value.trim().toLowerCase();
+  var list = document.getElementById('ged-list');
+  var html='';
+  var count=0;
+  for(var iid in gedParsed.indis){
+    var p = gedParsed.indis[iid];
+    var nm = gedDisplayName(p);
+    if(q && nm.toLowerCase().indexOf(q)<0) continue;
+    html += '<div class="sr-item" onclick="confirmGedRoot(\''+iid+'\')">'+esc(nm)
+      + (p.birt?' <span style="color:var(--fog);font-size:.68rem">('+esc(p.birt)+')</span>':'')+'</div>';
+    count++;
+    if(count>=60){ html+='<div class="sr-item" style="color:var(--fog-lt)">... afina la búsqueda</div>'; break; }
+  }
+  list.innerHTML = html || '<div class="sr-item">Sin coincidencias</div>';
+}
+
+function gedDateToApp(s){
+  // 'DD MMM YYYY' → {exact}, 'ABT YYYY' → rango año, 'BET a AND b' → rango
+  if(!s) return {};
+  var M={'JAN':'01','FEB':'02','MAR':'03','APR':'04','MAY':'05','JUN':'06','JUL':'07','AUG':'08','SEP':'09','OCT':'10','NOV':'11','DEC':'12'};
+  var m = s.match(/^(\d{1,2}) ([A-Z]{3}) (\d{4})$/);
+  if(m && M[m[2]]) return {exact: m[3]+'-'+M[m[2]]+'-'+String(parseInt(m[1],10)).padStart(2,'0')};
+  var ab = s.match(/^ABT (\d{4})$/);
+  if(ab) return {from:ab[1]+'-01-01', to:ab[1]+'-12-31'};
+  var bt = s.match(/^BET (.+) AND (.+)$/);
+  if(bt){
+    var a=gedDateToApp(bt[1]), b=gedDateToApp(bt[2]);
+    return {from:a.exact||a.from, to:b.exact||b.to};
+  }
+  var yo = s.match(/(\d{4})/);
+  if(yo) return {from:yo[1]+'-01-01', to:yo[1]+'-12-31'};
+  return {};
+}
+
+function confirmGedRoot(rootIid){
+  closeGedModal();
+  // limpiar y reconstruir línea directa desde rootIid
+  for(var k in nodes) delete nodes[k];
+  for(var k2 in sibs) delete sibs[k2];
+
+  function imp(iid, lineageId){
+    var p = gedParsed.indis[iid];
+    if(!p) return;
+    var n = makeNode(lineageId, lineageId==='0'?null:lineageId.slice(0,-1), true);
+    n.firstName = p.givn || p.name.split('/')[0].trim();
+    n.surname1 = p.surn || (p.name.split('/')[1]||'').trim(); // concatenado: separar a mano
+    if(p.sex==='M') n.sex='V'; else if(p.sex==='F') n.sex='M';
+    var d = gedDateToApp(p.birt);
+    if(d.exact){ n.birthDateExact=d.exact; n.birthRangeFrom=d.exact; n.birthRangeTo=d.exact; }
+    else if(d.from){ n.birthRangeFrom=d.from; n.birthRangeTo=d.to||d.from; }
+    if(p.birtplace) n.birthPlace = p.birtplace.split(',')[0].trim();
+    nodes[lineageId]=n;
+    // subir a padres vía FAMC
+    if(p.famc && gedParsed.fams[p.famc]){
+      var fam = gedParsed.fams[p.famc];
+      if(fam.husb) imp(fam.husb, lineageId+'p');
+      if(fam.wife) imp(fam.wife, lineageId+'m');
+    }
+  }
+  imp(rootIid, '0');
+  if(!nodes['0']) nodes['0']=makeNode('0',null,true);
+  renderAll();
+  pushAllToCloud();
+  saveLocal();
+  toast('GEDCOM importado: '+Object.keys(nodes).length+' ancestros directos. Recuerda separar los apellidos.');
+}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function download(name, content, type){
+  var blob = new Blob([content],{type:type});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className='show';
+  if(t._t) clearTimeout(t._t);
+  t._t = setTimeout(function(){ t.className=''; }, 2600);
+}
+function showSaveIndicator(){
+  var el = document.getElementById('save-indicator');
+  if(!el) return;
+  el.style.opacity='1';
+  if(el._t) clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.style.opacity='0'; }, 1800);
+}
+
+// ═══════════════════════════════════════════════════
+// SUPABASE — AUTH + SYNC
+// ═══════════════════════════════════════════════════
+function sbConfigured(){
+  return SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined';
+}
+
+function authMsg(msg, cls){
+  var el = document.getElementById('auth-msg');
+  el.textContent = msg;
+  el.className = 'auth-msg '+(cls||'');
+}
+
+function authLogin(){
+  if(!sbConfigured()){ authMsg('Supabase no configurado en este archivo','err'); return; }
+  var email=v('auth-email'), pass=document.getElementById('auth-pass').value;
+  if(!email||!pass){ authMsg('Introduce correo y contraseña','err'); return; }
+  authMsg('Entrando...','');
+  sb.auth.signInWithPassword({email:email, password:pass}).then(function(res){
+    if(res.error){ authMsg(res.error.message,'err'); return; }
+    currentUser = res.data.user;
+    onLoggedIn();
+  });
+}
+
+function authSignup(){
+  if(!sbConfigured()){ authMsg('Supabase no configurado en este archivo','err'); return; }
+  var email=v('auth-email'), pass=document.getElementById('auth-pass').value;
+  if(!email||!pass){ authMsg('Introduce correo y contraseña','err'); return; }
+  if(pass.length<6){ authMsg('Contraseña: mínimo 6 caracteres','err'); return; }
+  authMsg('Creando cuenta...','');
+  sb.auth.signUp({email:email, password:pass}).then(function(res){
+    if(res.error){ authMsg(res.error.message,'err'); return; }
+    if(res.data.user && !res.data.session){
+      authMsg('Cuenta creada. Revisa tu correo para confirmar y luego entra.','ok');
+    } else {
+      currentUser = res.data.user;
+      onLoggedIn();
+    }
+  });
+}
+
+function authLogout(){
+  if(sb) sb.auth.signOut();
+  currentUser=null; treeId=null;
+  location.reload();
+}
+
+function useLocalMode(){
+  localMode = true;
+  document.getElementById('auth-overlay').style.display='none';
+  loadLocal();
+  renderAll();
+  toast('Modo local: los datos solo se guardan en este dispositivo');
+}
+
+function onLoggedIn(){
+  document.getElementById('auth-overlay').style.display='none';
+  ensureTree().then(function(){
+    return loadFromCloud();
+  }).then(function(hadCloud){
+    if(!hadCloud){
+      // si la nube está vacía pero hay datos locales, súbelos
+      var hadLocal = loadLocal();
+      if(hadLocal && Object.keys(nodes).length>1){
+        pushAllToCloud();
+        toast('Datos locales subidos a tu cuenta');
+      }
+    }
+    renderAll();
+    // Vaciar la cola de cambios sin sincronizar (si los había de una sesión offline)
+    setTimeout(flushOutbox, 500);
+  });
+}
+
+function ensureTree(){
+  return sb.from('trees').select('id').limit(1).then(function(res){
+    if(res.error) throw res.error;
+    if(res.data && res.data.length){ treeId = res.data[0].id; return; }
+    return sb.from('trees').insert({owner: currentUser.id, name:'Mi árbol'}).select('id').then(function(r2){
+      if(r2.error) throw r2.error;
+      treeId = r2.data[0].id;
+    });
+  });
+}
+
+function loadFromCloud(){
+  return sb.from('persons').select('lineage_id, sibling_of, data').eq('tree_id', treeId).then(function(res){
+    if(res.error){ toast('Error cargando nube: '+res.error.message); return false; }
+    if(!res.data || !res.data.length) return false;
+    for(var k in nodes) delete nodes[k];
+    for(var k2 in sibs) delete sibs[k2];
+    for(var i=0;i<res.data.length;i++){
+      var row = res.data[i];
+      if(row.sibling_of){
+        if(!sibs[row.sibling_of]) sibs[row.sibling_of]=[];
+        sibs[row.sibling_of].push(row.data);
+      } else {
+        var base = makeNode(row.lineage_id, row.lineage_id==='0'?null:row.lineage_id.slice(0,-1), true);
+        for(var key in base){ if(row.data[key]!==undefined) base[key]=row.data[key]; }
+        base.role = roleOf(row.lineage_id);
+        nodes[row.lineage_id]=base;
+      }
+    }
+    if(!nodes['0']) nodes['0']=makeNode('0',null,true);
+    var ids = Object.keys(nodes).sort(function(a,b){return a.length-b.length;});
+    for(var ii=0; ii<ids.length; ii++){
+      if(nodes[ids[ii]].unlocked) propagate(ids[ii]);
+    }
+    saveLocal();
+    return true;
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// OFFLINE OUTBOX — cola de cambios pendientes de subir a Supabase.
+// Si el usuario está sin internet (catacumba eclesiástica, monasterio rural,
+// metro, etc.), los cambios se guardan en localStorage y se reintenta el
+// upload cuando vuelva la conexión.
+// ═══════════════════════════════════════════════════
+var OUTBOX_KEY = 'arbol_outbox_v2';
+var outbox = []; // [{type:'node'|'sibs', id:'...'}, ...]
+try {
+  var raw = localStorage.getItem(OUTBOX_KEY);
+  if(raw) outbox = JSON.parse(raw) || [];
+} catch(e){ outbox = []; }
+
+function saveOutbox(){
+  try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(outbox)); } catch(e){}
+}
+function queueNode(id){
+  // Evita duplicados
+  for(var i=0;i<outbox.length;i++){
+    if(outbox[i].type==='node' && outbox[i].id===id) return;
+  }
+  outbox.push({type:'node', id:id});
+  saveOutbox();
+  updateOutboxBadge();
+}
+function queueSibs(ancestorId){
+  for(var i=0;i<outbox.length;i++){
+    if(outbox[i].type==='sibs' && outbox[i].id===ancestorId) return;
+  }
+  outbox.push({type:'sibs', id:ancestorId});
+  saveOutbox();
+  updateOutboxBadge();
+}
+function updateOutboxBadge(){
+  var el = document.getElementById('save-indicator');
+  if(!el) return;
+  if(outbox.length>0 && (!navigator.onLine || localMode || !sbConfigured() || !treeId)){
+    el.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:.25rem"><path d="M3 13v6a2 2 0 002 2h14a2 2 0 002-2v-6"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'+outbox.length+' cambio'+(outbox.length>1?'s':'')+' sin sincronizar';
+    el.style.color = 'var(--rust-lt)';
+    el.classList.add('visible');
+  }
+}
+function flushOutbox(){
+  if(!navigator.onLine || localMode || !sbConfigured() || !treeId || !outbox.length) return;
+  var pending = outbox.slice();
+  // limpiamos optimistamente; si algo falla, lo volvemos a encolar
+  outbox = [];
+  saveOutbox();
+  var rows = [];
+  for(var i=0;i<pending.length;i++){
+    var item = pending[i];
+    if(item.type==='node'){
+      var n = nodes[item.id];
+      if(!n) continue;
+      rows.push({tree_id:treeId, lineage_id:item.id, sibling_of:null, data:n});
+    } else if(item.type==='sibs'){
+      // borrar y reinsertar
+      (function(aid){
+        sb.from('persons').delete().eq('tree_id',treeId).eq('sibling_of',aid).then(function(){
+          var list = sibs[aid]||[]; if(!list.length) return;
+          var srows = [];
+          for(var k=0;k<list.length;k++) srows.push({tree_id:treeId, lineage_id:aid+'#'+k, sibling_of:aid, data:list[k]});
+          sb.from('persons').insert(srows).then(function(r){
+            if(r && r.error){ queueSibs(aid); }
+          });
+        });
+      })(item.id);
+    }
+  }
+  if(rows.length){
+    sb.from('persons').upsert(rows,{onConflict:'tree_id,lineage_id'}).then(function(res){
+      if(res && res.error){
+        // re-encolar lo que falló
+        for(var r=0;r<pending.length;r++){
+          if(pending[r].type==='node') queueNode(pending[r].id);
+        }
+        toast('Sincronización pendiente: '+res.error.message);
+      } else {
+        showSaveIndicator();
+      }
+    });
+  }
+}
+
+// Eventos online/offline: cuando vuelva la red, vaciar la cola
+window.addEventListener('online', function(){ toast('Conexión restablecida — subiendo cambios'); flushOutbox(); });
+window.addEventListener('offline', function(){ toast('Sin conexión — guardando localmente'); updateOutboxBadge(); });
+
+function persistNode(lineageId){
+  var n = nodes[lineageId];
+  if(!n) return;
+  showSaveIndicator();
+  saveLocal(); // siempre localmente primero
+  if(localMode || !sbConfigured() || !treeId) return;
+  if(!navigator.onLine){ queueNode(lineageId); return; }
+  sb.from('persons').upsert(
+    {tree_id:treeId, lineage_id:lineageId, sibling_of:null, data:n},
+    {onConflict:'tree_id,lineage_id'}
+  ).then(function(res){
+    if(res.error){
+      console.warn('Sync error:', res.error.message);
+      queueNode(lineageId);
+    }
+  });
+}
+
+function persistSiblings(ancestorId){
+  showSaveIndicator();
+  saveLocal();
+  if(localMode || !sbConfigured() || !treeId) return;
+  if(!navigator.onLine){ queueSibs(ancestorId); return; }
+  // borrar y reinsertar los hermanos de ese ancestro
+  sb.from('persons').delete().eq('tree_id',treeId).eq('sibling_of',ancestorId).then(function(){
+    var list = sibs[ancestorId]||[];
+    if(!list.length) return;
+    var rows = [];
+    for(var i=0;i<list.length;i++){
+      rows.push({tree_id:treeId, lineage_id:ancestorId+'#'+i, sibling_of:ancestorId, data:list[i]});
+    }
+    sb.from('persons').insert(rows).then(function(res){
+      if(res.error){
+        console.warn('Sync sibs error:', res.error.message);
+        queueSibs(ancestorId);
+      }
+    });
+  });
+}
+
+function pushAllToCloud(){
+  if(localMode || !sbConfigured() || !treeId) return;
+  var rows = [];
+  for(var id in nodes){
+    if(!nodes[id].unlocked) continue;
+    rows.push({tree_id:treeId, lineage_id:id, sibling_of:null, data:nodes[id]});
+  }
+  for(var aid in sibs){
+    var list = sibs[aid];
+    for(var i=0;i<list.length;i++){
+      rows.push({tree_id:treeId, lineage_id:aid+'#'+i, sibling_of:aid, data:list[i]});
+    }
+  }
+  if(!rows.length) return;
+  sb.from('persons').upsert(rows, {onConflict:'tree_id,lineage_id'}).then(function(res){
+    if(res.error) console.warn('Push error:', res.error.message);
+    else showSaveIndicator();
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// LOCAL STORAGE (caché / modo sin cuenta)
+// ═══════════════════════════════════════════════════
+var LS_KEY = 'arbol_genealogico_v2';
+function saveLocal(){
+  try { localStorage.setItem(LS_KEY, JSON.stringify({nodes:nodes, sibs:sibs})); } catch(e){}
+}
+function loadLocal(){
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    var d = JSON.parse(raw);
+    for(var k in nodes) delete nodes[k];
+    for(var k2 in sibs) delete sibs[k2];
+    var inNodes = d.nodes||{};
+    for(var id in inNodes){
+      var base = makeNode(id, inNodes[id].parent, inNodes[id].unlocked);
+      for(var key in base){ if(inNodes[id][key]!==undefined) base[key]=inNodes[id][key]; }
+      base.role = roleOf(id);
+      nodes[id]=base;
+    }
+    var inSibs = d.sibs||{};
+    for(var sid in inSibs) sibs[sid]=inSibs[sid];
+    if(!nodes['0']) nodes['0']=makeNode('0',null,true);
+    var ids = Object.keys(nodes).sort(function(a,b){return a.length-b.length;});
+    for(var ii=0; ii<ids.length; ii++){
+      if(nodes[ids[ii]].unlocked) propagate(ids[ii]);
+    }
+    return Object.keys(nodes).length>0;
+  } catch(e){ return false; }
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+document.addEventListener('click', function(e){
+  // cerrar dropdowns al pulsar fuera
+  var sr = document.getElementById('search-results');
+  if(sr && e.target.id!=='searchbox') sr.className='';
+});
+document.getElementById('modal-bd').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+document.getElementById('sib-bd').addEventListener('click', function(e){ if(e.target===this) closeSibModal(); });
+document.getElementById('ged-bd').addEventListener('click', function(e){ if(e.target===this) closeGedModal(); });
+window.addEventListener('resize', function(){ renderFan(); });
+
+(function init(){
+  if(sbConfigured()){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    sb.auth.getSession().then(function(res){
+      if(res.data && res.data.session){
+        currentUser = res.data.session.user;
+        onLoggedIn();
+      } else {
+        document.getElementById('auth-overlay').style.display='flex';
+      }
+    });
+  } else {
+    // sin configurar: modo local directo
+    localMode = true;
+    loadLocal();
+    renderAll();
+  }
+})();
+</script>
+</body>
+</html>

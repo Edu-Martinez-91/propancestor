@@ -1,0 +1,40 @@
+{
+  "nodes": {
+    "0":    { "id":"0",    "unlocked":true, "firstName":"Carlos",   "surname1":"García",   "surname2":"López",   "sex":"M", "birthDateExact":"1990-05-12", "birthPlace":"Madrid",  "birthRangeFrom":"1990-05-12", "birthRangeTo":"1990-05-12", "fatherAge":35, "motherAge":32 },
+
+    "0p":   { "id":"0p",   "unlocked":true, "firstName":"José",     "surname1":"García",   "surname2":"Martínez",  "sex":"M", "birthDateExact":"1955-03-08", "birthPlace":"Toledo",  "birthRangeFrom":"1955-03-08", "birthRangeTo":"1955-03-08", "fatherAge":30, "motherAge":27 },
+    "0m":   { "id":"0m",   "unlocked":true, "firstName":"Ana",      "surname1":"López",    "surname2":"Ruiz",      "sex":"F", "birthDateExact":"1958-11-22", "birthPlace":"Cuenca",  "birthRangeFrom":"1958-11-22", "birthRangeTo":"1958-11-22", "fatherAge":34, "motherAge":28 },
+
+    "0pp":  { "id":"0pp",  "unlocked":true, "firstName":"Antonio",  "surname1":"García",   "surname2":"Pérez",     "sex":"M", "birthDateExact":"1925-01-14", "birthPlace":"Toledo",  "birthRangeFrom":"1925-01-14", "birthRangeTo":"1925-01-14", "fatherAge":29, "motherAge":24 },
+    "0pm":  { "id":"0pm",  "unlocked":true, "firstName":"Carmen",   "surname1":"Martínez", "surname2":"Gómez",     "sex":"F", "birthDateExact":"1928-07-03", "birthPlace":"Toledo",  "birthRangeFrom":"1928-07-03", "birthRangeTo":"1928-07-03", "fatherAge":31, "motherAge":26 },
+    "0mp":  { "id":"0mp",  "unlocked":true, "firstName":"Manuel",   "surname1":"López",    "surname2":"Vázquez",   "sex":"M", "birthDateExact":"1924-09-18", "birthPlace":"Cuenca",  "birthRangeFrom":"1924-09-18", "birthRangeTo":"1924-09-18", "fatherAge":28, "motherAge":25 },
+    "0mm":  { "id":"0mm",  "unlocked":true, "firstName":"Isabel",   "surname1":"Ruiz",     "surname2":"Fernández", "sex":"F", "birthDateExact":"1930-04-27", "birthPlace":"Sevilla", "birthRangeFrom":"1930-04-27", "birthRangeTo":"1930-04-27", "fatherAge":33, "motherAge":29 },
+
+    "0ppp": { "id":"0ppp", "unlocked":true, "firstName":"Francisco", "surname1":"García",  "surname2":"Sánchez",   "sex":"M", "birthRangeFrom":"1895-06-01", "birthRangeTo":"1896-06-01", "birthPlace":"Toledo" },
+    "0ppm": { "id":"0ppm", "unlocked":true, "firstName":"Dolores",   "surname1":"Pérez",   "surname2":"Jiménez",   "sex":"F", "birthRangeFrom":"1900-02-01", "birthRangeTo":"1901-02-01", "birthPlace":"Toledo" },
+    "0pmp": { "id":"0pmp", "unlocked":true, "firstName":"Vicente",   "surname1":"Martínez","surname2":"Romero",    "sex":"M", "birthRangeFrom":"1896-08-01", "birthRangeTo":"1897-08-01", "birthPlace":"Toledo" },
+    "0pmm": { "id":"0pmm", "unlocked":true, "firstName":"Pilar",     "surname1":"Gómez",   "surname2":"Castro",    "sex":"F", "birthRangeFrom":"1901-12-01", "birthRangeTo":"1902-12-01", "birthPlace":"Cuenca" },
+    "0mpp": { "id":"0mpp", "unlocked":true, "firstName":"Julián",    "surname1":"López",   "surname2":"Moreno",    "sex":"M", "birthRangeFrom":"1895-04-01", "birthRangeTo":"1896-04-01", "birthPlace":"Cuenca" },
+    "0mpm": { "id":"0mpm", "unlocked":true, "firstName":"Rosario",   "surname1":"Vázquez", "surname2":"Navarro",   "sex":"F", "birthRangeFrom":"1898-10-01", "birthRangeTo":"1899-10-01", "birthPlace":"Cuenca" },
+    "0mmp": { "id":"0mmp", "unlocked":true, "firstName":"Andrés",    "surname1":"Ruiz",    "surname2":"Ortiz",     "sex":"M", "birthRangeFrom":"1896-01-01", "birthRangeTo":"1897-01-01", "birthPlace":"Sevilla" },
+    "0mmm": { "id":"0mmm", "unlocked":true, "firstName":"Concepción","surname1":"Fernández","surname2":"Delgado",  "sex":"F", "birthRangeFrom":"1900-05-01", "birthRangeTo":"1901-05-01", "birthPlace":"Granada" },
+
+    "0pppp":{ "id":"0pppp","unlocked":true, "firstName":"Juan",      "surname1":"García",  "surname2":"Herrero",   "birthRangeFrom":"1865-01-01", "birthRangeTo":"1867-12-31", "birthPlace":"Toledo" },
+    "0pppm":{ "id":"0pppm","unlocked":true, "firstName":"Manuela",   "surname1":"Sánchez", "surname2":"León",      "birthRangeFrom":"1868-01-01", "birthRangeTo":"1870-12-31", "birthPlace":"Toledo" },
+    "0ppmp":{ "id":"0ppmp","unlocked":true, "firstName":"Pedro",     "surname1":"Pérez",   "surname2":"Iglesias",  "birthRangeFrom":"1870-01-01", "birthRangeTo":"1872-12-31", "birthPlace":"Toledo" },
+    "0ppmm":{ "id":"0ppmm","unlocked":true, "firstName":"Teresa",    "surname1":"Jiménez", "surname2":"Crespo",    "birthRangeFrom":"1872-01-01", "birthRangeTo":"1874-12-31", "birthPlace":"Cuenca" },
+    "0pmpp":{ "id":"0pmpp","unlocked":true, "firstName":"Bernardo",  "surname1":"Martínez","surname2":"Aguilar",   "birthRangeFrom":"1866-01-01", "birthRangeTo":"1868-12-31", "birthPlace":"Toledo" },
+    "0pmpm":{ "id":"0pmpm","unlocked":true, "firstName":"Eugenia",   "surname1":"Romero",  "surname2":"Vidal",     "birthRangeFrom":"1869-01-01", "birthRangeTo":"1871-12-31", "birthPlace":"Toledo" },
+    "0pmmp":{ "id":"0pmmp","unlocked":true, "firstName":"Tomás",     "surname1":"Gómez",   "surname2":"Soler",     "birthRangeFrom":"1871-01-01", "birthRangeTo":"1873-12-31", "birthPlace":"Cuenca" },
+    "0pmmm":{ "id":"0pmmm","unlocked":true, "firstName":"Rita",      "surname1":"Castro",  "surname2":"Mendoza",   "birthRangeFrom":"1874-01-01", "birthRangeTo":"1876-12-31", "birthPlace":"Cuenca" },
+    "0mppp":{ "id":"0mppp","unlocked":true, "firstName":"Esteban",   "surname1":"López",   "surname2":"Carrasco",  "birthRangeFrom":"1865-01-01", "birthRangeTo":"1867-12-31", "birthPlace":"Cuenca" },
+    "0mppm":{ "id":"0mppm","unlocked":true, "firstName":"Petra",     "surname1":"Moreno",  "surname2":"Quintana",  "birthRangeFrom":"1867-01-01", "birthRangeTo":"1869-12-31", "birthPlace":"Cuenca" },
+    "0mpmp":{ "id":"0mpmp","unlocked":true, "firstName":"Joaquín",   "surname1":"Vázquez", "surname2":"Cano",      "birthRangeFrom":"1868-01-01", "birthRangeTo":"1870-12-31", "birthPlace":"Cuenca" },
+    "0mpmm":{ "id":"0mpmm","unlocked":true, "firstName":"Asunción",  "surname1":"Navarro", "surname2":"Bravo",     "birthRangeFrom":"1870-01-01", "birthRangeTo":"1872-12-31", "birthPlace":"Madrid" },
+    "0mmpp":{ "id":"0mmpp","unlocked":true, "firstName":"Felipe",    "surname1":"Ruiz",    "surname2":"Calvo",     "birthRangeFrom":"1866-01-01", "birthRangeTo":"1868-12-31", "birthPlace":"Sevilla" },
+    "0mmpm":{ "id":"0mmpm","unlocked":true, "firstName":"Encarnación","surname1":"Ortiz",  "surname2":"Reyes",     "birthRangeFrom":"1869-01-01", "birthRangeTo":"1871-12-31", "birthPlace":"Sevilla" },
+    "0mmmp":{ "id":"0mmmp","unlocked":true, "firstName":"Rafael",    "surname1":"Fernández","surname2":"Lozano",   "birthRangeFrom":"1872-01-01", "birthRangeTo":"1874-12-31", "birthPlace":"Granada" },
+    "0mmmm":{ "id":"0mmmm","unlocked":true, "firstName":"Soledad",   "surname1":"Delgado", "surname2":"Pascual",   "birthRangeFrom":"1875-01-01", "birthRangeTo":"1877-12-31", "birthPlace":"Granada" }
+  },
+  "sibs": {}
+}

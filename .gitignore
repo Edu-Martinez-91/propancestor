@@ -1,0 +1,34 @@
+# ═══════════════════════════════════════════════════
+# Datos personales — NUNCA subir el árbol propio
+# ═══════════════════════════════════════════════════
+arbol_datos_v2.json
+arbol_datos.json
+mi_arbol.json
+*.private.json
+
+# ═══════════════════════════════════════════════════
+# Sistema y editores
+# ═══════════════════════════════════════════════════
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ═══════════════════════════════════════════════════
+# Logs y temporales
+# ═══════════════════════════════════════════════════
+*.log
+.netlify/
+node_modules/
+.env
+.env.local
+
+# ═══════════════════════════════════════════════════
+# Backups y borradores
+# ═══════════════════════════════════════════════════
+*.bak
+*.backup
+index.html.bak

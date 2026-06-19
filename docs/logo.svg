@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Fondo redondo color tinta -->
+  <circle cx="60" cy="60" r="58" fill="#1c1712"/>
+  <!-- Árbol radial con seis ramas, ámbar claro -->
+  <g stroke="#e6c673" stroke-width="2.4" stroke-linecap="round" fill="none">
+    <line x1="60" y1="60" x2="60" y2="22"/>
+    <line x1="60" y1="60" x2="93" y2="40"/>
+    <line x1="60" y1="60" x2="93" y2="80"/>
+    <line x1="60" y1="60" x2="60" y2="98"/>
+    <line x1="60" y1="60" x2="27" y2="80"/>
+    <line x1="60" y1="60" x2="27" y2="40"/>
+  </g>
+  <g fill="#e6c673">
+    <circle cx="60" cy="60" r="3.5"/>
+    <circle cx="60" cy="22" r="2.6"/>
+    <circle cx="93" cy="40" r="2.6"/>
+    <circle cx="93" cy="80" r="2.6"/>
+    <circle cx="60" cy="98" r="2.6"/>
+    <circle cx="27" cy="80" r="2.6"/>
+    <circle cx="27" cy="40" r="2.6"/>
+  </g>
+</svg>
