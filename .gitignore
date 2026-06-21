@@ -35,3 +35,8 @@ node_modules/
 *.bak
 *.backup
 index.html.bak
+
+# ═══════════════════════════════════════════════════
+# Notas internas — nunca públicas a partir de ahora
+# ═══════════════════════════════════════════════════
+CONTEXTO_SESION.md
