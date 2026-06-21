@@ -80,6 +80,7 @@ Lista priorizada de partidas pendientes, clasificadas en Registro Civil / Parroq
 - **Detección de incongruencias.** Avisos cuando las edades declaradas en el acta del hijo y las del acta de un hermano dan rangos sin solape, o cuando los apellidos del nieto no se corresponden con los del abuelo.
 - **Defunciones.** Campos de fecha y lugar de defunción por persona, con propagación de pista "ya estaba difunto en el acta del hijo".
 - **Modal de configuración.** Cuenta, importar JSON/GEDCOM, exportar JSON/GEDCOM. Logo SVG animado a la izquierda, engranaje a la derecha.
+- **Comparación antes de importar o sincronizar.** Si el JSON/GEDCOM que importas, o el árbol que hay en tu cuenta al iniciar sesión, no coincide con lo que ya tienes en este dispositivo, aparece un aviso con el recuento de personas y hermanos de cada lado y tres opciones explícitas — combinar (campo a campo, sin perder nada ya verificado), mantener el árbol actual, o sustituir por el entrante — para que ningún import o login pueda borrar datos genealógicos sin que lo decidas tú mismo.
 - **Offline-first.** Toda la app vive en `localStorage`. Cuando hay red, una outbox sincroniza los cambios con Supabase.
 - **Cero emojis en producción.** Una librería interna de iconos SVG (`ICONS`) sustituye a los emojis: rendering consistente entre iOS, Android y escritorio.
 - **iOS-safe.** Sin optional chaining, sin nullish coalescing, sin `continue` dentro de `forEach`. Probado en Safari iOS antiguos.

@@ -80,6 +80,7 @@ A prioritized list of pending records, classified as Civil Registry / Parish / e
 - **Inconsistency detection.** Warnings when the declared ages on a child's record and a sibling's record produce non-overlapping ranges, or when a grandchild's surnames don't match the grandparent's.
 - **Deaths.** Per-person date and place of death fields, with "was already deceased on the child's record" hint propagation.
 - **Settings modal.** Account, JSON/GEDCOM import, JSON/GEDCOM export. Animated SVG logo on the left, gear icon on the right.
+- **Comparison before importing or syncing.** If the JSON/GEDCOM you import, or the tree in your account when you log in, doesn't match what's already on this device, a warning shows the person/sibling count on each side and three explicit choices — merge (field by field, nothing already verified gets lost), keep the current tree, or replace it with the incoming one — so no import or login can ever wipe genealogical data without you deciding it.
 - **Offline-first.** The whole app lives in `localStorage`. When there's a connection, an outbox syncs changes to Supabase.
 - **Zero emojis in production.** An internal SVG icon library (`ICONS`) replaces emojis entirely, for consistent rendering across iOS, Android, and desktop.
 - **iOS-safe.** No optional chaining, no nullish coalescing, no `continue` inside `forEach`. Tested on older iOS Safari versions.
