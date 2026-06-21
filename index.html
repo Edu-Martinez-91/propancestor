@@ -3430,6 +3430,18 @@ bindBackdropClose('import-compare-bd', closeImportCompare);
 bindBackdropClose('danger-confirm-bd', cancelDangerConfirm);
 window.addEventListener('resize', function(){ renderFan(); });
 
+// renderFan() mide el layout real (clientWidth, getBoundingClientRect().top)
+// en el momento en que se llama. En la primera carga eso puede ocurrir antes
+// de que las fuentes web (carga asíncrona, display:swap) terminen de aplicar
+// y cambien la altura de la cabecera — desencuadrando el abanico hasta que
+// algo más (cambiar el desplegable, redimensionar) lo recalcule. Forzamos
+// un recálculo en cuanto las fuentes estén listas, y otro tras el load
+// completo de la página como red de seguridad.
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(function(){ renderFan(); });
+}
+window.addEventListener('load', function(){ renderFan(); });
+
 (function init(){
   if(sbConfigured()){
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

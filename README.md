@@ -12,7 +12,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](#licencia)
 [![Single file](https://img.shields.io/badge/Single--file-HTML-orange)]()
 
-### 🚀 [Usar la app ahora → ubiquitous-cat-fb3b45.netlify.app](https://ubiquitous-cat-fb3b45.netlify.app)
+### [Usar la app ahora](https://ubiquitous-cat-fb3b45.netlify.app)
 
 *Abre `index.html` en cualquier navegador, o usa directamente el enlace de arriba — no requiere instalación. Puedes crear una cuenta ahí mismo si quieres que tu árbol se sincronice entre dispositivos (opcional).*
 
@@ -48,7 +48,7 @@ La mayoría de árboles genealógicos online (FamilySearch, MyHeritage, Geni...)
 
 ## El abanico
 
-El núcleo visual es un abanico radial editable, inspirado en los de FamilySearch pero con texto longitudinal (los nombres se leen siguiendo el radio) y tres modos de coloreado:
+El núcleo visual es un abanico radial editable, con texto longitudinal (los nombres se leen siguiendo el radio) y tres modos de coloreado:
 
 ### Por estirpe
 Cada cuadrante hereda un tono distinto, con la saturación aumentando con la cantidad de información conocida.

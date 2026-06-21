@@ -12,7 +12,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](#license)
 [![Single file](https://img.shields.io/badge/Single--file-HTML-orange)]()
 
-### 🚀 [Use the app now → ubiquitous-cat-fb3b45.netlify.app](https://ubiquitous-cat-fb3b45.netlify.app)
+### [Use the app now](https://ubiquitous-cat-fb3b45.netlify.app)
 
 *Open `index.html` in any browser, or just use the link above — no installation required. You can create an account there if you want your tree synced across devices (optional).*
 
@@ -48,7 +48,7 @@ Most online family-tree tools (FamilySearch, MyHeritage, Geni...) are built for 
 
 ## The fan chart
 
-The visual core is an editable radial fan chart, inspired by FamilySearch's but with longitudinal text (names read along the radius) and three coloring modes:
+The visual core is an editable radial fan chart, with longitudinal text (names read along the radius) and three coloring modes:
 
 ### By lineage
 Each quadrant inherits a distinct hue, with saturation increasing alongside how much is known about that person.
