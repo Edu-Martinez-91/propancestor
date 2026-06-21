@@ -101,6 +101,18 @@ h3 .ic{margin-right:.4rem;color:var(--parch2)}
 /* Modal guía para solicitar certificado: mismos colores legibles que settings */
 #cert-help-bd .hbtn-ghost{color:var(--ink);border-color:var(--parch3);background:#fff;font-size:.75rem;padding:.4rem .9rem}
 #cert-help-bd .hbtn-ghost:hover{background:var(--parch2)}
+
+/* Modal de comparación antes de importar/cargar desde la nube: mismos colores legibles que settings */
+#import-compare-bd .hbtn-ghost{color:var(--ink);border-color:var(--parch3);background:#fff;font-size:.78rem;padding:.55rem .8rem}
+#import-compare-bd .hbtn-ghost:hover{background:var(--parch2)}
+#import-compare-bd .hbtn-rust{font-size:.78rem;padding:.55rem .8rem;background:#fff}
+#import-compare-bd .hbtn-moss{font-size:.78rem;padding:.55rem .8rem}
+#import-compare-bd .hbtn-moss:hover{background:#3f5c3a}
+#import-compare-bd table{width:100%;font-size:.72rem;border-collapse:collapse;margin-bottom:.9rem}
+#import-compare-bd th{text-align:left;color:var(--fog);padding:.2rem 0}
+#import-compare-bd td{padding:.2rem 0;color:var(--ink)}
+#import-compare-bd tr.import-compare-total{font-weight:600;border-top:1px solid var(--parch3)}
+#import-compare-bd tr.import-compare-total td{padding-top:.3rem}
 .cert-steps{margin:0;padding-left:1.1rem;font-size:.76rem;color:var(--ink);line-height:1.5}
 .cert-steps > li{margin-bottom:.7rem}
 .cert-steps .cert-step-h{font-family:'EB Garamond',serif;font-size:.95rem;color:var(--amber);font-weight:600;margin-bottom:.15rem}
@@ -595,6 +607,37 @@ textarea{resize:vertical;min-height:54px}
       </div>
       <input type="text" id="ged-search" placeholder="Buscar por nombre..." oninput="filterGedList()" style="margin-bottom:.5rem">
       <div id="ged-list" style="max-height:300px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="import-compare-bd">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-hd">
+      <div><h2>Comparar antes de aplicar</h2><p id="import-compare-sub">Revisa los números antes de decidir</p></div>
+      <button class="modal-close" onclick="closeImportCompare()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;display:block;margin:0 auto"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p id="import-compare-msg" style="font-size:.74rem;color:var(--ink);line-height:1.6;margin-bottom:.8rem"></p>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th id="import-compare-cur-header">Actual</th>
+            <th id="import-compare-new-header">Archivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Personas</td><td id="import-compare-cur-persons">0</td><td id="import-compare-new-persons">0</td></tr>
+          <tr><td>Hermanos</td><td id="import-compare-cur-sibs">0</td><td id="import-compare-new-sibs">0</td></tr>
+          <tr class="import-compare-total"><td>Total</td><td id="import-compare-cur-total">0</td><td id="import-compare-new-total">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-ft" style="flex-direction:column;align-items:stretch;gap:.4rem">
+      <button class="hbtn hbtn-moss" style="width:100%" onclick="resolveImportCompare('merge')">Combinar ambos (recomendado)</button>
+      <button class="hbtn hbtn-ghost" style="width:100%" id="import-compare-keep-current-btn" onclick="resolveImportCompare('keepCurrent')">Mantener mi árbol actual</button>
+      <button class="hbtn hbtn-rust" style="width:100%" id="import-compare-keep-file-btn" onclick="resolveImportCompare('keepFile')">Sustituir por el archivo</button>
     </div>
   </div>
 </div>
@@ -2496,6 +2539,171 @@ function delSibling(aid, idx){
 }
 
 // ═══════════════════════════════════════════════════
+// COMPARACIÓN ANTES DE IMPORTAR / CARGAR DESDE LA NUBE
+// Evita que un JSON/GEDCOM vacío o parcial, o un primer login
+// con la nube desactualizada, borre sin avisar datos ya guardados.
+// ═══════════════════════════════════════════════════
+var pendingTreeImport = null; // {nodes, sibs, isCloudLoad}
+
+function countTree(nodesObj, sibsObj){
+  var persons = 0, id;
+  for(id in nodesObj){ if(nodesObj[id] && nodesObj[id].unlocked) persons++; }
+  var siblings = 0, k;
+  for(k in sibsObj){ siblings += (sibsObj[k]||[]).length; }
+  return {persons:persons, siblings:siblings, total:persons+siblings};
+}
+
+function isEmptyTreeValue(v){
+  return v===undefined || v===null || v==='';
+}
+
+// Firma estable de un árbol completo (nodes+sibs), para detectar si dos
+// versiones son exactamente iguales sin tener que preguntar nada al usuario.
+function treeSignature(nodesObj, sibsObj){
+  var parts = [], ids = Object.keys(nodesObj).sort(), i;
+  for(i=0;i<ids.length;i++) parts.push(ids[i]+':'+JSON.stringify(nodesObj[ids[i]]));
+  var sids = Object.keys(sibsObj).sort();
+  for(i=0;i<sids.length;i++) parts.push('sib:'+sids[i]+':'+JSON.stringify(sibsObj[sids[i]]));
+  return parts.join('|');
+}
+
+// Igual que loadLocal(), pero sin mutar nodes/sibs globales — solo lee
+// localStorage a un árbol temporal para poder compararlo antes de aplicar nada.
+function readLocalTreeRaw(){
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if(!raw) return null;
+    var d = JSON.parse(raw);
+    var tNodes = {}, tSibs = {}, id, sid, key;
+    var inNodes = d.nodes||{};
+    for(id in inNodes){
+      var base = makeNode(id, inNodes[id].parent, inNodes[id].unlocked);
+      for(key in base){ if(inNodes[id][key]!==undefined) base[key]=inNodes[id][key]; }
+      base.role = roleOf(id);
+      tNodes[id]=base;
+    }
+    var inSibs = d.sibs||{};
+    for(sid in inSibs) tSibs[sid]=inSibs[sid];
+    if(!tNodes['0']) tNodes['0']=makeNode('0',null,true);
+    return { nodes: tNodes, sibs: tSibs };
+  } catch(e){ return null; }
+}
+
+// Persona en ambos lados: gana el valor actual si no está vacío;
+// el archivo/nube solo rellena los campos que el actual tenga en blanco.
+function mergeNodesPreferCurrent(curNodes, impNodes){
+  var merged = {}, id, key;
+  for(id in curNodes) merged[id] = curNodes[id];
+  for(id in impNodes){
+    if(!merged[id]){ merged[id] = impNodes[id]; continue; }
+    var cur = merged[id], imp = impNodes[id], out = {};
+    for(key in cur) out[key] = cur[key];
+    for(key in imp){ if(isEmptyTreeValue(out[key]) && !isEmptyTreeValue(imp[key])) out[key] = imp[key]; }
+    out.unlocked = cur.unlocked || imp.unlocked;
+    merged[id] = out;
+  }
+  return merged;
+}
+
+// Hermanos no tienen id estable: unión de ambos arrays con deduplicado exacto.
+function mergeSibsUnion(curSibs, impSibs){
+  var merged = {}, k, i, j;
+  for(k in curSibs) merged[k] = (curSibs[k]||[]).slice();
+  for(k in impSibs){
+    if(!merged[k]) merged[k] = [];
+    var existing = merged[k], incoming = impSibs[k]||[];
+    for(i=0;i<incoming.length;i++){
+      var dup = false, incJson = JSON.stringify(incoming[i]);
+      for(j=0;j<existing.length;j++){ if(JSON.stringify(existing[j])===incJson){ dup=true; break; } }
+      if(!dup) existing.push(incoming[i]);
+    }
+  }
+  return merged;
+}
+
+function openImportCompare(importedNodes, importedSibs, opts){
+  pendingTreeImport = { nodes: importedNodes, sibs: importedSibs, isCloudLoad: !!opts.isCloudLoad };
+  var cur = countTree(nodes, sibs);
+  var imp = countTree(importedNodes, importedSibs);
+
+  document.getElementById('import-compare-sub').textContent = opts.sourceLabel;
+  document.getElementById('import-compare-msg').textContent = opts.message ||
+    ('Lo que tienes ahora no coincide con ' + opts.sourceLabel + '. Decide qué hacer antes de que se aplique nada.');
+  document.getElementById('import-compare-cur-header').textContent = opts.isCloudLoad ? 'Este dispositivo' : 'Actual';
+  document.getElementById('import-compare-new-header').textContent = opts.isCloudLoad ? 'La nube' : 'Archivo';
+
+  document.getElementById('import-compare-cur-persons').textContent = cur.persons;
+  document.getElementById('import-compare-cur-sibs').textContent = cur.siblings;
+  document.getElementById('import-compare-cur-total').textContent = cur.total;
+  document.getElementById('import-compare-new-persons').textContent = imp.persons;
+  document.getElementById('import-compare-new-sibs').textContent = imp.siblings;
+  document.getElementById('import-compare-new-total').textContent = imp.total;
+
+  document.getElementById('import-compare-keep-current-btn').textContent =
+    opts.isCloudLoad ? 'Mantener este dispositivo (sobrescribe la nube)' : 'Mantener mi árbol actual';
+  document.getElementById('import-compare-keep-file-btn').textContent =
+    opts.isCloudLoad ? 'Usar la versión de la nube' : 'Sustituir por el archivo';
+
+  document.getElementById('import-compare-bd').className = 'modal-backdrop open';
+  lockPageZoom('import-compare-bd');
+}
+
+function closeImportCompare(){
+  document.getElementById('import-compare-bd').className = 'modal-backdrop';
+  unlockPageZoom('import-compare-bd');
+  pendingTreeImport = null;
+}
+
+function applyFinalTree(finalNodes, finalSibs){
+  var k;
+  for(k in nodes) delete nodes[k];
+  for(k in finalNodes) nodes[k] = finalNodes[k];
+  for(k in sibs) delete sibs[k];
+  for(k in finalSibs) sibs[k] = finalSibs[k];
+  if(!nodes['0']) nodes['0'] = makeNode('0', null, true);
+  var ids = Object.keys(nodes).sort(function(a,b){ return a.length-b.length; });
+  for(var ii=0; ii<ids.length; ii++){ if(nodes[ids[ii]].unlocked) propagate(ids[ii]); }
+  renderAll();
+}
+
+function resolveImportCompare(choice){
+  if(!pendingTreeImport) return;
+  var importedNodes = pendingTreeImport.nodes;
+  var importedSibs = pendingTreeImport.sibs;
+  var isCloudLoad = pendingTreeImport.isCloudLoad;
+  document.getElementById('import-compare-bd').className = 'modal-backdrop';
+  unlockPageZoom('import-compare-bd');
+  pendingTreeImport = null;
+
+  if(choice === 'keepCurrent'){
+    if(isCloudLoad){
+      // el local gana: lo subimos para que la nube quede igual y no vuelva a preguntar
+      pushAllToCloud();
+      saveLocal();
+      toast('Manteniendo este dispositivo, subido a la nube');
+    } else {
+      toast('Manteniendo tu árbol actual, archivo descartado');
+    }
+    return;
+  }
+
+  var finalNodes, finalSibs, needsPush;
+  if(choice === 'merge'){
+    finalNodes = mergeNodesPreferCurrent(nodes, importedNodes);
+    finalSibs = mergeSibsUnion(sibs, importedSibs);
+    needsPush = true; // el resultado combinado no existe todavía tal cual en la nube
+  } else { // keepFile / usar la nube
+    finalNodes = importedNodes;
+    finalSibs = importedSibs;
+    needsPush = !isCloudLoad; // si venía de la nube, la nube ya tiene exactamente esta versión
+  }
+  applyFinalTree(finalNodes, finalSibs);
+  if(needsPush) pushAllToCloud();
+  saveLocal();
+  toast((choice === 'merge' ? 'Árboles combinados: ' : 'Aplicado: ') + Object.keys(nodes).length + ' personas');
+}
+
+// ═══════════════════════════════════════════════════
 // IMPORT / EXPORT JSON (fiel a la BBDD: dos apellidos)
 // ═══════════════════════════════════════════════════
 function exportJSON(){
@@ -2513,8 +2721,7 @@ function handleImport(e){
       var imported = JSON.parse(ev.target.result);
       var inNodes = imported.nodes || imported; // v2 o formato antiguo plano
       var inSibs  = imported.sibs || {};
-      for(var k in nodes) delete nodes[k];
-      for(var k2 in sibs) delete sibs[k2];
+      var tempNodes = {};
       for(var id in inNodes){
         var nd = inNodes[id];
         // migración formato antiguo (birthYearFrom números)
@@ -2525,20 +2732,9 @@ function handleImport(e){
         var base = makeNode(id, nd.parent, nd.unlocked);
         for(var key in base){ if(nd[key]!==undefined) base[key]=nd[key]; }
         base.role = roleOf(id);
-        nodes[id]=base;
+        tempNodes[id]=base;
       }
-      for(var sid in inSibs) sibs[sid]=inSibs[sid];
-      // Propagar todos los nodos desbloqueados para crear hijos derivados
-      // (p.ej. si Juan tenía `fatherFirstName='Venancio'` pero Venancio no
-      // estaba como nodo, propagate lo crea ahora)
-      var ids = Object.keys(nodes).sort(function(a,b){return a.length-b.length;});
-      for(var ii=0; ii<ids.length; ii++){
-        if(nodes[ids[ii]].unlocked) propagate(ids[ii]);
-      }
-      renderAll();
-      pushAllToCloud();
-      saveLocal();
-      toast('JSON importado: '+Object.keys(nodes).length+' personas');
+      openImportCompare(tempNodes, inSibs, { sourceLabel: 'el archivo JSON que has subido' });
     } catch(err){ alert('Error al importar: archivo no válido. '+err.message); }
     e.target.value='';
   };
@@ -2764,9 +2960,9 @@ function gedDateToApp(s){
 
 function confirmGedRoot(rootIid){
   closeGedModal();
-  // limpiar y reconstruir línea directa desde rootIid
-  for(var k in nodes) delete nodes[k];
-  for(var k2 in sibs) delete sibs[k2];
+  // reconstruir línea directa desde rootIid en un árbol temporal,
+  // sin tocar nodes/sibs todavía — eso lo decide openImportCompare()
+  var tempNodes = {};
 
   function imp(iid, lineageId){
     var p = gedParsed.indis[iid];
@@ -2779,7 +2975,7 @@ function confirmGedRoot(rootIid){
     if(d.exact){ n.birthDateExact=d.exact; n.birthRangeFrom=d.exact; n.birthRangeTo=d.exact; }
     else if(d.from){ n.birthRangeFrom=d.from; n.birthRangeTo=d.to||d.from; }
     if(p.birtplace) n.birthPlace = p.birtplace.split(',')[0].trim();
-    nodes[lineageId]=n;
+    tempNodes[lineageId]=n;
     // subir a padres vía FAMC
     if(p.famc && gedParsed.fams[p.famc]){
       var fam = gedParsed.fams[p.famc];
@@ -2788,11 +2984,11 @@ function confirmGedRoot(rootIid){
     }
   }
   imp(rootIid, '0');
-  if(!nodes['0']) nodes['0']=makeNode('0',null,true);
-  renderAll();
-  pushAllToCloud();
-  saveLocal();
-  toast('GEDCOM importado: '+Object.keys(nodes).length+' ancestros directos. Recuerda separar los apellidos.');
+  if(!tempNodes['0']) tempNodes['0']=makeNode('0',null,true);
+  openImportCompare(tempNodes, {}, {
+    sourceLabel: 'el archivo GEDCOM que has subido',
+    message: 'El GEDCOM solo trae la línea directa de ancestros (sin hermanos). Recuerda separar los apellidos después. Decide qué hacer antes de aplicarlo.'
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -2892,8 +3088,9 @@ function onLoggedIn(){
       }
     }
     renderAll();
-    // Vaciar la cola de cambios sin sincronizar (si los había de una sesión offline)
-    setTimeout(flushOutbox, 500);
+    // Vaciar la cola de cambios sin sincronizar (si los había de una sesión offline).
+    // Si hay una comparación local-vs-nube pendiente de decidir, no tocar nada todavía.
+    setTimeout(function(){ if(!pendingTreeImport) flushOutbox(); }, 500);
   });
 }
 
@@ -2912,26 +3109,40 @@ function loadFromCloud(){
   return sb.from('persons').select('lineage_id, sibling_of, data').eq('tree_id', treeId).then(function(res){
     if(res.error){ toast('Error cargando nube: '+res.error.message); return false; }
     if(!res.data || !res.data.length) return false;
-    for(var k in nodes) delete nodes[k];
-    for(var k2 in sibs) delete sibs[k2];
-    for(var i=0;i<res.data.length;i++){
+
+    var cloudNodes = {}, cloudSibs = {}, i;
+    for(i=0;i<res.data.length;i++){
       var row = res.data[i];
       if(row.sibling_of){
-        if(!sibs[row.sibling_of]) sibs[row.sibling_of]=[];
-        sibs[row.sibling_of].push(row.data);
+        if(!cloudSibs[row.sibling_of]) cloudSibs[row.sibling_of]=[];
+        cloudSibs[row.sibling_of].push(row.data);
       } else {
         var base = makeNode(row.lineage_id, row.lineage_id==='0'?null:row.lineage_id.slice(0,-1), true);
         for(var key in base){ if(row.data[key]!==undefined) base[key]=row.data[key]; }
         base.role = roleOf(row.lineage_id);
-        nodes[row.lineage_id]=base;
+        cloudNodes[row.lineage_id]=base;
       }
     }
-    if(!nodes['0']) nodes['0']=makeNode('0',null,true);
-    var ids = Object.keys(nodes).sort(function(a,b){return a.length-b.length;});
-    for(var ii=0; ii<ids.length; ii++){
-      if(nodes[ids[ii]].unlocked) propagate(ids[ii]);
+    if(!cloudNodes['0']) cloudNodes['0']=makeNode('0',null,true);
+
+    // ¿hay datos guardados en este dispositivo que no coincidan con la nube?
+    // si los hay, no se sustituyen a ciegas — se le pregunta al usuario.
+    var localRaw = readLocalTreeRaw();
+    var localCount = localRaw ? countTree(localRaw.nodes, localRaw.sibs) : {persons:0,siblings:0,total:0};
+
+    if(!localRaw || localCount.total<=0 ||
+       treeSignature(localRaw.nodes, localRaw.sibs) === treeSignature(cloudNodes, cloudSibs)){
+      applyFinalTree(cloudNodes, cloudSibs);
+      saveLocal();
+      return true;
     }
-    saveLocal();
+
+    applyFinalTree(localRaw.nodes, localRaw.sibs); // mostrar lo local mientras el usuario decide
+    openImportCompare(cloudNodes, cloudSibs, {
+      isCloudLoad: true,
+      sourceLabel: 'tu cuenta en la nube',
+      message: 'Tienes datos guardados en este dispositivo que no coinciden con tu cuenta en la nube. Decide qué hacer antes de continuar — no se aplicará nada todavía.'
+    });
     return true;
   });
 }
@@ -3127,6 +3338,7 @@ document.addEventListener('click', function(e){
 document.getElementById('modal-bd').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 document.getElementById('sib-bd').addEventListener('click', function(e){ if(e.target===this) closeSibModal(); });
 document.getElementById('ged-bd').addEventListener('click', function(e){ if(e.target===this) closeGedModal(); });
+document.getElementById('import-compare-bd').addEventListener('click', function(e){ if(e.target===this) closeImportCompare(); });
 window.addEventListener('resize', function(){ renderFan(); });
 
 (function init(){
