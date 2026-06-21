@@ -5,6 +5,9 @@ arbol_datos_v2.json
 arbol_datos.json
 mi_arbol.json
 *.private.json
+json_bk/
+arbol_genealogico_bk_*.json
+*_bk_*.json
 
 # ═══════════════════════════════════════════════════
 # Sistema y editores
