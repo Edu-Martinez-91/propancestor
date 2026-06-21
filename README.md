@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/logo.svg" alt="propancestor" width="120" height="120">
+<img src="docs/logo.svg" alt="Propancestor" width="120" height="120">
 
-# propancestor
+# Propancestor
 
 **Herramienta de investigación genealógica para árboles personales — un solo archivo HTML, sin frameworks, sin build, sin npm.**
 
@@ -24,21 +24,21 @@
 
 ## ¿Qué es esto?
 
-**propancestor** es una aplicación web para investigar y visualizar tu árbol genealógico. Está pensada para personas que buscan partidas en registros civiles y archivos parroquiales españoles: cada acta encontrada se vuelca al árbol, los rangos de fechas se triangulan con los datos de hijos y hermanos, y el siguiente acta a buscar aparece sola, ordenada por probabilidad y vía documental.
+**Propancestor** es una aplicación web para investigar y visualizar tu árbol genealógico. Está pensada para personas que buscan partidas en registros civiles y archivos parroquiales españoles: cada acta encontrada se vuelca al árbol, los rangos de fechas se triangulan con los datos de hijos y hermanos, y el siguiente acta a buscar aparece sola, ordenada por probabilidad y vía documental.
 
 Toda la aplicación cabe en un único `index.html`. Funciona sin conexión gracias a `localStorage` y sincroniza en la nube con Supabase cuando hay red. Cero dependencias en el navegador, cero pasos de build.
 
 ---
 
-## ¿Por qué propancestor?
+## ¿Por qué Propancestor?
 
-La mayoría de árboles genealógicos online (FamilySearch, MyHeritage, Geni...) están diseñados para diásporas: familias que migraron entre países a lo largo de los siglos, y cuyo árbol se mueve por continentes en pocas generaciones. **propancestor nace de un caso distinto: el de familias españolas sin apenas movilidad geográfica**, donde lo que importa no es por qué país pasó cada antepasado, sino por qué *pueblo*.
+La mayoría de árboles genealógicos online (FamilySearch, MyHeritage, Geni...) están diseñados para diásporas: familias que migraron entre países a lo largo de los siglos, y cuyo árbol se mueve por continentes en pocas generaciones. **Propancestor nace de un caso distinto: el de familias españolas sin apenas movilidad geográfica**, donde lo que importa no es por qué país pasó cada antepasado, sino por qué *pueblo*.
 
 1. **Granularidad de pueblo, no de país.** Donde FamilySearch te ofrece un campo "país" por persona, aquí cada perfil tiene su municipio de nacimiento, y el abanico se puede colorear por pueblo para ver de un vistazo cómo se concentran o dispersan las raíces familiares en una misma comarca.
 
 2. **Aprovecha la trazabilidad del sistema español de apellidos.** En España las mujeres no pierden su apellido al casarse, y cada persona lleva dos apellidos (uno paterno, uno materno) en vez de uno solo. Eso da una trazabilidad documental que no existe en otros países, y es justo lo que permite la propagación de datos del punto siguiente: un apellido materno en un acta identifica directamente a una estirpe completa, no se diluye en una generación.
 
-3. **Propagación de la información hacia generaciones anteriores.** Al introducir los datos de un acta de nacimiento (civil o parroquial) de un antepasado, la app no solo registra a esa persona: prepara automáticamente el perfil de sus padres con los datos que ya constan en el acta (nombre, edad declarada, origen), listos para pedir *sus* actas. Y si esa misma acta declara también la edad y el pueblo de origen de los abuelos —algo habitual en partidas antiguas—, **propancestor** da un paso más y prepara también los perfiles de los abuelos. Una sola visita al registro o al archivo puede destapar tres generaciones de golpe.
+3. **Propagación de la información hacia generaciones anteriores.** Al introducir los datos de un acta de nacimiento (civil o parroquial) de un antepasado, la app no solo registra a esa persona: prepara automáticamente el perfil de sus padres con los datos que ya constan en el acta (nombre, edad declarada, origen), listos para pedir *sus* actas. Y si esa misma acta declara también la edad y el pueblo de origen de los abuelos —algo habitual en partidas antiguas—, **Propancestor** da un paso más y prepara también los perfiles de los abuelos. Una sola visita al registro o al archivo puede destapar tres generaciones de golpe.
 
 4. **Calculador de rangos de edad de nacimiento.** Cada acta aporta una edad declarada de los padres en ese momento; la app cruza esa información con la de hermanos y descendientes para ir estrechando, por intersección de ventanas, el rango de nacimiento real de cada antepasado — incluso de aquellos de los que nunca se llegue a tener un acta propia.
 

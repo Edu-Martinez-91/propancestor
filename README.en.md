@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/logo.svg" alt="propancestor" width="120" height="120">
+<img src="docs/logo.svg" alt="Propancestor" width="120" height="120">
 
-# propancestor
+# Propancestor
 
 **Genealogy research tool for personal family trees — a single HTML file, no frameworks, no build, no npm.**
 
@@ -24,21 +24,21 @@
 
 ## What is this?
 
-**propancestor** is a web app for researching and visualizing your family tree. It's built for people searching civil registry and parish records in Spain: every certificate you find gets entered into the tree, date ranges are triangulated against children's and siblings' data, and the next record to look for surfaces on its own — ranked by likelihood and by which archive to query.
+**Propancestor** is a web app for researching and visualizing your family tree. It's built for people searching civil registry and parish records in Spain: every certificate you find gets entered into the tree, date ranges are triangulated against children's and siblings' data, and the next record to look for surfaces on its own — ranked by likelihood and by which archive to query.
 
 The entire app fits in a single `index.html`. It works offline via `localStorage` and syncs to the cloud through Supabase when there's a connection. Zero browser dependencies, zero build steps.
 
 ---
 
-## Why propancestor?
+## Why Propancestor?
 
-Most online family-tree tools (FamilySearch, MyHeritage, Geni...) are built for diasporas: families who migrated across countries over the centuries, whose tree spans continents within a few generations. **propancestor comes from a different case: Spanish families with little to no geographic mobility**, where what matters isn't which *country* an ancestor passed through, but which *town*.
+Most online family-tree tools (FamilySearch, MyHeritage, Geni...) are built for diasporas: families who migrated across countries over the centuries, whose tree spans continents within a few generations. **Propancestor comes from a different case: Spanish families with little to no geographic mobility**, where what matters isn't which *country* an ancestor passed through, but which *town*.
 
 1. **Town-level granularity, not country-level.** Where FamilySearch gives you a "country" field per person, here every profile carries its birth municipality, and the fan chart can be colored by town to instantly see how family roots cluster — or scatter — within the same region.
 
 2. **Built around the traceability of the Spanish surname system.** In Spain, women don't lose their surname when they marry, and every person carries two surnames (one from each parent) instead of just one. That gives a documentary traceability that doesn't exist in most other countries, and it's exactly what powers the propagation described in the next point: a maternal surname on a record identifies a whole lineage directly, instead of dissolving after one generation.
 
-3. **Propagating information upward, toward earlier generations.** When you enter the data from an ancestor's birth record (civil or parish), the app doesn't just log that one person — it automatically pre-fills the parents' profiles with whatever the record already states (name, declared age, place of origin), ready for you to request *their* records next. And if that same record also states the age and hometown of the grandparents — common in older records — **propancestor** goes one step further and pre-fills the grandparents' profiles too. A single trip to the registry or archive can uncover three generations at once.
+3. **Propagating information upward, toward earlier generations.** When you enter the data from an ancestor's birth record (civil or parish), the app doesn't just log that one person — it automatically pre-fills the parents' profiles with whatever the record already states (name, declared age, place of origin), ready for you to request *their* records next. And if that same record also states the age and hometown of the grandparents — common in older records — **Propancestor** goes one step further and pre-fills the grandparents' profiles too. A single trip to the registry or archive can uncover three generations at once.
 
 4. **Birth-date-range calculator.** Every record gives a declared age for the parents at that moment; the app cross-references that against siblings and descendants to narrow down, through window intersection, the real birth range of each ancestor — even ones for whom you'll never find a record of their own.
 
