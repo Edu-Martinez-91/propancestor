@@ -8,11 +8,13 @@
 
 [![Made with vanilla JS](https://img.shields.io/badge/Vanilla-JS-f7df1e?logo=javascript&logoColor=black)](https://developer.mozilla.org/docs/Web/JavaScript)
 [![Supabase](https://img.shields.io/badge/Backend-Supabase-3ecf8e?logo=supabase&logoColor=white)](https://supabase.com)
-[![Deploy: Netlify](https://img.shields.io/badge/Deploy-Netlify-00c7b7?logo=netlify&logoColor=white)](https://www.netlify.com)
+[![Deploy: Netlify](https://img.shields.io/badge/Deploy-Netlify-00c7b7?logo=netlify&logoColor=white)](https://ubiquitous-cat-fb3b45.netlify.app)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](#license)
 [![Single file](https://img.shields.io/badge/Single--file-HTML-orange)]()
 
-*Open `index.html` in any browser — no installation required.*
+### 🚀 [Use the app now → ubiquitous-cat-fb3b45.netlify.app](https://ubiquitous-cat-fb3b45.netlify.app)
+
+*Open `index.html` in any browser, or just use the link above — no installation required. You can create an account there if you want your tree synced across devices (optional).*
 
 [🇪🇸 Español](README.md) · 🇬🇧 **English**
 
