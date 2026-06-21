@@ -113,6 +113,10 @@ h3 .ic{margin-right:.4rem;color:var(--parch2)}
 #import-compare-bd td{padding:.2rem 0;color:var(--ink)}
 #import-compare-bd tr.import-compare-total{font-weight:600;border-top:1px solid var(--parch3)}
 #import-compare-bd tr.import-compare-total td{padding-top:.3rem}
+#danger-confirm-bd .hbtn-ghost{color:var(--ink);border-color:var(--parch3);background:#fff;font-size:.78rem;padding:.55rem .8rem}
+#danger-confirm-bd .hbtn-ghost:hover{background:var(--parch2)}
+#danger-confirm-bd .hbtn-rust{font-size:.78rem;padding:.55rem .8rem;background:#fff}
+#danger-confirm-bd .hbtn-rust:disabled{opacity:.4;cursor:not-allowed}
 .cert-steps{margin:0;padding-left:1.1rem;font-size:.76rem;color:var(--ink);line-height:1.5}
 .cert-steps > li{margin-bottom:.7rem}
 .cert-steps .cert-step-h{font-family:'EB Garamond',serif;font-size:.95rem;color:var(--amber);font-weight:600;margin-bottom:.15rem}
@@ -637,7 +641,25 @@ textarea{resize:vertical;min-height:54px}
     <div class="modal-ft" style="flex-direction:column;align-items:stretch;gap:.4rem">
       <button class="hbtn hbtn-moss" style="width:100%" onclick="resolveImportCompare('merge')">Combinar ambos (recomendado)</button>
       <button class="hbtn hbtn-ghost" style="width:100%" id="import-compare-keep-current-btn" onclick="resolveImportCompare('keepCurrent')">Mantener mi árbol actual</button>
-      <button class="hbtn hbtn-rust" style="width:100%" id="import-compare-keep-file-btn" onclick="resolveImportCompare('keepFile')">Sustituir por el archivo</button>
+      <button class="hbtn hbtn-rust" style="width:100%" id="import-compare-keep-file-btn" onclick="confirmDestructiveImport()">Sustituir por el archivo</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="danger-confirm-bd">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-hd">
+      <div><h2>Última comprobación</h2><p>Esto no se puede deshacer</p></div>
+      <button class="modal-close" onclick="cancelDangerConfirm()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;display:block;margin:0 auto"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p id="danger-confirm-msg" style="font-size:.74rem;color:var(--ink);line-height:1.6;margin-bottom:.8rem"></p>
+      <p style="font-size:.74rem;color:var(--ink);margin-bottom:.4rem">Escribe <strong id="danger-confirm-word" style="color:var(--rust-lt)"></strong> para confirmar:</p>
+      <input type="text" id="danger-confirm-input" autocomplete="off" oninput="checkDangerConfirmInput()" style="margin-bottom:.5rem">
+    </div>
+    <div class="modal-ft">
+      <button class="hbtn hbtn-ghost" onclick="cancelDangerConfirm()">Cancelar</button>
+      <button class="hbtn hbtn-rust" id="danger-confirm-btn" disabled onclick="executeDangerConfirm()">Confirmar borrado</button>
     </div>
   </div>
 </div>
@@ -1817,6 +1839,7 @@ function renderSearchPanel(){
 function toggleCertRequested(id, on){
   var n = nodes[id];
   if(!n) return;
+  if(!on && !confirm('¿Marcar como NO solicitada? Se perderá la fecha de solicitud y el contador de días en espera.')) return;
   n.certRequestedAt = on ? new Date().toISOString() : null;
   saveLocal();
   persistNode(id);
@@ -1825,6 +1848,7 @@ function toggleCertRequested(id, on){
 function restartCertRequested(id){
   var n = nodes[id];
   if(!n) return;
+  if(!confirm('¿Reiniciar el contador de días en espera? La fecha de solicitud se pondrá a hoy.')) return;
   n.certRequestedAt = new Date().toISOString();
   saveLocal();
   persistNode(id);
@@ -2528,14 +2552,15 @@ function saveSibData(){
   toast('Hermano/a guardado');
 }
 function delSibling(aid, idx){
-  if(!confirm('¿Eliminar este hermano/a?')) return;
-  sibs[aid].splice(idx,1);
-  propagate(aid);
-  openModal(aid);
-  renderAll();
-  persistSiblings(aid);
-  persistNode(aid+'p'); persistNode(aid+'m');
-  saveLocal();
+  dangerConfirm('Vas a eliminar este hermano/a del árbol. Sus datos no se podrán recuperar.', function(){
+    sibs[aid].splice(idx,1);
+    propagate(aid);
+    openModal(aid);
+    renderAll();
+    persistSiblings(aid);
+    persistNode(aid+'p'); persistNode(aid+'m');
+    saveLocal();
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -2652,6 +2677,55 @@ function closeImportCompare(){
   document.getElementById('import-compare-bd').className = 'modal-backdrop';
   unlockPageZoom('import-compare-bd');
   pendingTreeImport = null;
+}
+
+// ── Doble confirmación para acciones destructivas ───────────
+// Paso 1: confirm() normal. Paso 2: escribir una palabra aleatoria que
+// se muestra en pantalla. Solo entonces se ejecuta el callback.
+var DANGER_WORDS = ['MANGO','TIGRE','LLUVIA','COHETE','PIANO','GLOBO','SENDERO','BRISA','CACTUS','TORTUGA','VOLCAN','ESTRELLA','PULPO','CARAMELO','LINTERNA'];
+var dangerConfirmWord = '';
+var dangerConfirmCallback = null;
+
+function dangerConfirm(message, callback){
+  if(!confirm(message + '\n\n¿Estás seguro?')) return;
+  dangerConfirmWord = DANGER_WORDS[Math.floor(Math.random()*DANGER_WORDS.length)];
+  dangerConfirmCallback = callback;
+  document.getElementById('danger-confirm-msg').textContent = message;
+  document.getElementById('danger-confirm-word').textContent = dangerConfirmWord;
+  document.getElementById('danger-confirm-input').value = '';
+  checkDangerConfirmInput();
+  document.getElementById('danger-confirm-bd').className = 'modal-backdrop open';
+  lockPageZoom('danger-confirm-bd');
+  document.getElementById('danger-confirm-input').focus();
+}
+
+function checkDangerConfirmInput(){
+  var ok = document.getElementById('danger-confirm-input').value.trim().toUpperCase() === dangerConfirmWord;
+  var btn = document.getElementById('danger-confirm-btn');
+  btn.disabled = !ok;
+}
+
+function executeDangerConfirm(){
+  if(document.getElementById('danger-confirm-input').value.trim().toUpperCase() !== dangerConfirmWord) return;
+  var cb = dangerConfirmCallback;
+  cancelDangerConfirm();
+  if(cb) cb();
+}
+
+function cancelDangerConfirm(){
+  document.getElementById('danger-confirm-bd').className = 'modal-backdrop';
+  unlockPageZoom('danger-confirm-bd');
+  dangerConfirmCallback = null;
+  dangerConfirmWord = '';
+}
+
+function confirmDestructiveImport(){
+  if(!pendingTreeImport) return;
+  var isCloudLoad = pendingTreeImport.isCloudLoad;
+  var msg = isCloudLoad
+    ? 'Vas a sustituir el árbol de este dispositivo por el de la nube. Lo que tengas aquí que no esté en la nube se perderá.'
+    : 'Vas a sustituir tu árbol actual por el del archivo importado. Lo que tengas ahora que no esté en el archivo se perderá.';
+  dangerConfirm(msg, function(){ resolveImportCompare('keepFile'); });
 }
 
 function applyFinalTree(finalNodes, finalSibs){
@@ -3353,6 +3427,7 @@ bindBackdropClose('modal-bd', closeModal);
 bindBackdropClose('sib-bd', closeSibModal);
 bindBackdropClose('ged-bd', closeGedModal);
 bindBackdropClose('import-compare-bd', closeImportCompare);
+bindBackdropClose('danger-confirm-bd', cancelDangerConfirm);
 window.addEventListener('resize', function(){ renderFan(); });
 
 (function init(){
