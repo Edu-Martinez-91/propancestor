@@ -3335,10 +3335,24 @@ document.addEventListener('click', function(e){
   var sr = document.getElementById('search-results');
   if(sr && e.target.id!=='searchbox') sr.className='';
 });
-document.getElementById('modal-bd').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
-document.getElementById('sib-bd').addEventListener('click', function(e){ if(e.target===this) closeSibModal(); });
-document.getElementById('ged-bd').addEventListener('click', function(e){ if(e.target===this) closeGedModal(); });
-document.getElementById('import-compare-bd').addEventListener('click', function(e){ if(e.target===this) closeImportCompare(); });
+// Cerrar al hacer clic fuera del modal — pero sin confundir un "click" real
+// con el final de una selección de texto que el usuario arrastró fuera del
+// modal (el navegador dispara click igualmente al soltar el ratón ahí).
+// Por eso exigimos que el mousedown Y el click hayan empezado y terminado
+// los dos exactamente sobre el fondo, no solo el click.
+function bindBackdropClose(backdropId, closeFn){
+  var backdrop = document.getElementById(backdropId);
+  var downOnBackdrop = false;
+  backdrop.addEventListener('mousedown', function(e){ downOnBackdrop = (e.target===backdrop); });
+  backdrop.addEventListener('click', function(e){
+    if(downOnBackdrop && e.target===backdrop) closeFn();
+    downOnBackdrop = false;
+  });
+}
+bindBackdropClose('modal-bd', closeModal);
+bindBackdropClose('sib-bd', closeSibModal);
+bindBackdropClose('ged-bd', closeGedModal);
+bindBackdropClose('import-compare-bd', closeImportCompare);
 window.addEventListener('resize', function(){ renderFan(); });
 
 (function init(){
