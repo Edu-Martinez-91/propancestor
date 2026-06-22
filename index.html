@@ -1174,8 +1174,15 @@ function propagate(nodeId){
     hintFromSib(nodes[nodeId+'mm'], sb2.mgmDeceased);
   }
 
-  fn.unlocked = true;
-  mn.unlocked = true;
+  // Solo desbloqueamos al padre/madre si el acta de este nodo declaró
+  // realmente algún dato suyo — si no, esto se ejecutaría sin condición en
+  // cada propagate(), incluyendo las pasadas masivas de loadLocal()/
+  // applyFinalTree() que recorren TODOS los nodos desbloqueados y vuelven
+  // a llamar a propagate() en cada uno: sin esta condición, cada apertura
+  // de la app desbloqueaba a los padres de cada nodo ya desbloqueado, una
+  // cascada que duplica aproximadamente el árbol entero en cada carga.
+  if(p.fatherFirstName || p.fatherSurname1 || p.fatherSurname2 || p.fatherOrigin) fn.unlocked = true;
+  if(p.motherFirstName || p.motherSurname1 || p.motherSurname2 || p.motherOrigin) mn.unlocked = true;
 
   // ───────────────────────────────────────────────
   // PROPAGACIÓN HACIA ABAJO
