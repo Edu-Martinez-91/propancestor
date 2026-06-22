@@ -419,6 +419,11 @@ textarea{resize:vertical;min-height:54px}
         <button class="hbtn hbtn-amber" style="width:100%;margin-bottom:.4rem" onclick="closeSettings();exportJSON()">⬇ Exportar a JSON</button>
         <button class="hbtn hbtn-rust" style="width:100%" onclick="closeSettings();exportGEDCOM()">⬇ Exportar a GEDCOM</button>
       </div>
+      <div class="fsec">
+        <div class="fsec-title"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg> Mantenimiento</div>
+        <p style="font-size:.68rem;color:var(--fog);margin-bottom:.5rem">Perfiles vacíos creados automáticamente sin ningún dato real (residuo de versiones antiguas). Limpiarlos solo los oculta — no borra ninguna información.</p>
+        <button class="hbtn hbtn-ghost" style="width:100%" onclick="closeSettings();cleanPhantomNodes()">🧹 Limpiar perfiles vacíos</button>
+      </div>
     </div>
     <div class="modal-ft">
       <button class="hbtn hbtn-ghost" onclick="closeSettings()">Cerrar</button>
@@ -3245,6 +3250,37 @@ function openSettings(){
 function closeSettings(){
   document.getElementById('settings-bd').className='modal-backdrop';
   unlockPageZoom('settings-bd');
+}
+
+// Un nodo "fantasma" es un perfil desbloqueado sin ningún dato real —
+// solo existe porque propagate() lo creó como placeholder en algún
+// momento (incluyendo el bug de cascada ya corregido, cuyo residuo puede
+// seguir en localStorage de antes de ese fix). No se borra información:
+// solo se vuelve a bloquear (unlocked=false), lo que lo saca del recuento,
+// del abanico y de las comparaciones local-vs-nube.
+function isPhantomNode(n){
+  if(!n || !n.unlocked || n.id==='0') return false;
+  var fields = ['firstName','surname1','surname2','officialName','alias',
+    'birthDateExact','birthRangeFrom','birthRangeTo','birthPlace',
+    'baptismDate','baptismPlace','deathDate','deathPlace','notes',
+    'certRequestedAt','certObtainedAt',
+    'fatherFirstName','fatherSurname1','fatherSurname2','fatherOrigin',
+    'motherFirstName','motherSurname1','motherSurname2','motherOrigin',
+    'pgfFirst','pgfSur1','pgfSur2','pgfOrigin','pgmFirst','pgmSur1','pgmSur2','pgmOrigin',
+    'mgfFirst','mgfSur1','mgfSur2','mgfOrigin','mgmFirst','mgmSur1','mgmSur2','mgmOrigin'];
+  for(var i=0;i<fields.length;i++){ if(n[fields[i]]) return false; }
+  return true;
+}
+function cleanPhantomNodes(){
+  var ids = [];
+  for(var id in nodes){ if(isPhantomNode(nodes[id])) ids.push(id); }
+  if(!ids.length){ alert('No se encontró ningún perfil vacío que limpiar.'); return; }
+  if(!confirm('Se van a ocultar '+ids.length+' perfiles vacíos sin ningún dato (placeholders creados automáticamente). No se borra ninguna información real. ¿Continuar?')) return;
+  for(var i=0;i<ids.length;i++){ nodes[ids[i]].unlocked = false; }
+  saveLocal();
+  pushAllToCloud();
+  renderAll();
+  toast(ids.length+' perfiles vacíos limpiados');
 }
 
 function filterGedList(){
