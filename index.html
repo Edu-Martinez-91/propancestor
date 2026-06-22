@@ -666,6 +666,7 @@ textarea{resize:vertical;min-height:54px}
       <button class="hbtn hbtn-moss" style="width:100%" onclick="resolveImportCompare('merge')">Combinar ambos (recomendado)</button>
       <button class="hbtn hbtn-ghost" style="width:100%" id="import-compare-keep-current-btn" onclick="resolveImportCompare('keepCurrent')">Mantener mi árbol actual</button>
       <button class="hbtn hbtn-rust" style="width:100%" id="import-compare-keep-file-btn" onclick="confirmDestructiveImport()">Sustituir por el archivo</button>
+      <button class="hbtn hbtn-ghost" style="width:100%;font-size:.68rem" onclick="showImportDiff()">Ver diferencias exactas (avanzado)</button>
     </div>
   </div>
 </div>
@@ -2881,6 +2882,51 @@ function closeImportCompare(){
   document.getElementById('import-compare-bd').className = 'modal-backdrop';
   unlockPageZoom('import-compare-bd');
   pendingTreeImport = null;
+}
+
+// Diagnóstico: compara campo a campo "lo actual" contra "lo entrante" y
+// devuelve una lista de diferencias legibles. Solo para depurar por qué
+// el aviso de comparación no deja de aparecer aunque los totales coincidan.
+function diffTrees(curNodes, curSibs, impNodes, impSibs){
+  var diffs = [], id, key, ids = {};
+  for(id in curNodes) ids[id]=true;
+  for(id in impNodes) ids[id]=true;
+  var idList = Object.keys(ids).sort();
+  for(var i=0;i<idList.length;i++){
+    id = idList[i];
+    var a = curNodes[id], b = impNodes[id];
+    if(!a){ diffs.push(id+': solo existe en lo entrante'); continue; }
+    if(!b){ diffs.push(id+': solo existe en lo actual'); continue; }
+    for(key in a){
+      if(JSON.stringify(a[key])!==JSON.stringify(b[key])){
+        diffs.push(id+'.'+key+': actual="'+a[key]+'" entrante="'+b[key]+'"');
+      }
+    }
+  }
+  var sibIds = {};
+  for(id in curSibs) sibIds[id]=true;
+  for(id in impSibs) sibIds[id]=true;
+  var sibIdList = Object.keys(sibIds).sort();
+  for(var j=0;j<sibIdList.length;j++){
+    id = sibIdList[j];
+    var sa = curSibs[id]||[], sb = impSibs[id]||[];
+    if(sa.length!==sb.length){ diffs.push('sib:'+id+': '+sa.length+' (actual) vs '+sb.length+' (entrante) hermanos'); continue; }
+    for(var k=0;k<sa.length;k++){
+      for(key in sa[k]){
+        if(JSON.stringify(sa[k][key])!==JSON.stringify(sb[k][key])){
+          diffs.push('sib:'+id+'['+k+'].'+key+': actual="'+sa[k][key]+'" entrante="'+sb[k][key]+'"');
+        }
+      }
+    }
+  }
+  return diffs;
+}
+
+function showImportDiff(){
+  if(!pendingTreeImport) return;
+  var diffs = diffTrees(nodes, sibs, pendingTreeImport.nodes, pendingTreeImport.sibs);
+  if(!diffs.length){ alert('No se encontró ninguna diferencia de contenido (puede ser un problema de orden de claves ya corregido en otra parte, o un falso positivo).'); return; }
+  alert('Diferencias encontradas ('+diffs.length+'):\n\n'+diffs.slice(0,25).join('\n')+(diffs.length>25?'\n\n… y '+(diffs.length-25)+' más':''));
 }
 
 // ── Doble confirmación para acciones destructivas ───────────
