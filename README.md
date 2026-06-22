@@ -77,7 +77,8 @@ Lista priorizada de partidas pendientes, clasificadas en Registro Civil / Parroq
 - **Triangulación de rangos.** Si conoces que tu bisabuelo tenía 27 años cuando nació tu abuela (acta de la abuela) y 33 cuando nació tu tío-abuelo (acta del tío), el rango de nacimiento del bisabuelo se calcula con la intersección de las dos ventanas.
 - **Propagación bidireccional.** El lugar de nacimiento puesto en el perfil del padre se replica al campo "origen del padre" del acta del hijo, y viceversa. Si las dos puntas tienen fecha exacta, las edades declaradas se recalculan a la edad real.
 - **Panel "actas a buscar".** Lista de las próximas partidas con un sólo botón a la sede electrónica del Ministerio de Justicia y guía paso a paso para rellenar el formulario.
-- **Tick de acta solicitada.** Contador de días en espera por persona, reiniciable cuando se pide a otro registro. Se cierra solo al introducir la fecha exacta.
+- **Tick de acta solicitada.** Contador de días en espera por persona, reiniciable cuando se pide a otro registro. Se cierra solo al introducir la fecha exacta, o manualmente con el botón ✓.
+- **Tiempos de respuesta por pueblo.** Pestaña "Tiempos" con la media de días que tarda en contestar el Registro Civil de cada pueblo, calculada sobre las actas que ya completaron el ciclo solicitud → obtención, ordenada de más lenta a más rápida.
 - **Apellidos predominantes.** Conteo agrupado por línea genealógica (paterna/materna), con normalización de variantes (`Díaz-Maroto`/`Diaz Maroto`/`de Diaz Maroto` cuentan como el mismo).
 - **Detección de incongruencias.** Avisos cuando las edades declaradas en el acta del hijo y las del acta de un hermano dan rangos sin solape, o cuando los apellidos del nieto no se corresponden con los del abuelo.
 - **Defunciones.** Campos de fecha y lugar de defunción por persona, con propagación de pista "ya estaba difunto en el acta del hijo".
