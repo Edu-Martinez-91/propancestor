@@ -3442,6 +3442,15 @@ if(document.fonts && document.fonts.ready){
 }
 window.addEventListener('load', function(){ renderFan(); });
 
+// Red de seguridad para móvil: localStorage.setItem() puede no llegar a
+// escribirse en disco si el sistema suspende la pestaña justo después de
+// una acción (cambiar de app, apagar pantalla...). Forzamos un guardado
+// extra justo en esos momentos, además del que ya hace cada acción.
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'hidden') saveLocal();
+});
+window.addEventListener('pagehide', function(){ saveLocal(); });
+
 (function init(){
   if(sbConfigured()){
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
