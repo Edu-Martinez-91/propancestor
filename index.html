@@ -804,6 +804,19 @@ function makeSibling(){
   };
 }
 
+// Reconstruye un hermano con el orden de claves fijo de makeSibling(),
+// en vez de usar el objeto en crudo tal como viene de su origen. Necesario
+// porque Postgres (jsonb) no conserva el mismo orden de claves que
+// JSON.parse() de localStorage — sin esto, dos hermanos con datos
+// idénticos podían producir un JSON.stringify distinto solo por el orden
+// interno, haciendo que treeSignature() los viera como "diferentes" y el
+// aviso de comparación nunca dejara de aparecer aunque todo coincidiera.
+function normalizeSibling(raw){
+  var base = makeSibling();
+  for(var key in base){ if(raw[key]!==undefined) base[key]=raw[key]; }
+  return base;
+}
+
 nodes['0'] = makeNode('0', null, true);
 
 function ensureChildren(parentId){
@@ -2799,7 +2812,7 @@ function readLocalTreeRaw(){
       tNodes[id]=base;
     }
     var inSibs = d.sibs||{};
-    for(sid in inSibs) tSibs[sid]=inSibs[sid];
+    for(sid in inSibs) tSibs[sid]=inSibs[sid].map(normalizeSibling);
     if(!tNodes['0']) tNodes['0']=makeNode('0',null,true);
     return { nodes: tNodes, sibs: tSibs };
   } catch(e){ return null; }
@@ -3380,7 +3393,7 @@ function loadFromCloud(){
       var row = res.data[i];
       if(row.sibling_of){
         if(!cloudSibs[row.sibling_of]) cloudSibs[row.sibling_of]=[];
-        cloudSibs[row.sibling_of].push(row.data);
+        cloudSibs[row.sibling_of].push(normalizeSibling(row.data));
       } else {
         var base = makeNode(row.lineage_id, row.lineage_id==='0'?null:row.lineage_id.slice(0,-1), true);
         for(var key in base){ if(row.data[key]!==undefined) base[key]=row.data[key]; }
