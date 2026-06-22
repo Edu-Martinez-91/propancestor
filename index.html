@@ -552,6 +552,17 @@ textarea{resize:vertical;min-height:54px}
       </div>
       <div id="spanel-body"></div>
     </div>
+
+    <div class="spanel">
+      <div class="spanel-hd" style="cursor:pointer" onclick="toggleObtainedRecent()">
+        <div>
+          <h3><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Actas obtenidas recientemente</h3>
+          <p>Si marcaste una por error, puedes deshacerlo aquí</p>
+        </div>
+        <span id="obtained-recent-caret" style="font-size:1.1rem;color:var(--fog);transition:transform .15s">▸</span>
+      </div>
+      <div id="obtained-recent-body" style="display:none"></div>
+    </div>
   </div>
 </div>
 
@@ -1686,6 +1697,7 @@ function renderAll(){
   renderSearchPanel();
   renderStats();
   renderWaitTimes();
+  if(document.getElementById('obtained-recent-body').style.display !== 'none') renderObtainedRecent();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1894,11 +1906,76 @@ function closeCertWait(n){
 function markCertObtained(id){
   var n = nodes[id];
   if(!n || !n.certRequestedAt) return;
+  if(!confirm('¿Marcar esta acta como obtenida hoy? Si te equivocas, podrás deshacerlo desde "Actas obtenidas recientemente".')) return;
   closeCertWait(n);
   saveLocal();
   persistNode(id);
   renderSearchPanel();
+  renderObtainedRecent();
+  renderWaitTimes();
   toast('Acta marcada como obtenida ✓');
+}
+// Deshace markCertObtained()/el disparo automático de saveData(): vuelve
+// a dejar el acta como pendiente, con los días en espera que el usuario
+// indique manualmente (certRequestedAt se recalcula hacia atrás para que
+// el contador de "Actas a buscar" empiece justo en ese número).
+function unmarkCertObtained(id){
+  var n = nodes[id];
+  if(!n || !n.certObtainedAt) return;
+  if(!confirm('¿Quitar la marca de "obtenida" y volver a dejar esta acta como pendiente?')) return;
+  var input = prompt('¿Cuántos días llevaba en espera cuando se marcó como obtenida? (déjalo en blanco si no lo sabes, se pondrá a 0)', n.certWaitDays!=null ? String(n.certWaitDays) : '0');
+  if(input===null) return;
+  var days = parseInt(input,10);
+  if(isNaN(days) || days<0) days = 0;
+  n.certRequestedAt = new Date(Date.now() - days*86400000).toISOString();
+  n.certObtainedAt = null;
+  n.certWaitDays = null;
+  saveLocal();
+  persistNode(id);
+  renderSearchPanel();
+  renderObtainedRecent();
+  renderWaitTimes();
+  toast('Acta marcada de nuevo como pendiente');
+}
+
+function toggleObtainedRecent(){
+  var body = document.getElementById('obtained-recent-body');
+  var caret = document.getElementById('obtained-recent-caret');
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  caret.style.transform = open ? '' : 'rotate(90deg)';
+  if(!open) renderObtainedRecent();
+}
+
+function renderObtainedRecent(){
+  var body = document.getElementById('obtained-recent-body');
+  if(!body) return;
+  var list = [];
+  for(var id in nodes){
+    var n = nodes[id];
+    if(n.unlocked && n.certObtainedAt) list.push({id:id, n:n});
+  }
+  if(!list.length){ body.innerHTML = '<p class="no-data-msg">Aún no has marcado ninguna acta como obtenida.</p>'; return; }
+  list.sort(function(a,b){ return new Date(b.n.certObtainedAt) - new Date(a.n.certObtainedAt); });
+  var html = '<div class="sitems">';
+  for(var i=0;i<list.length;i++){
+    var pe = list[i], n2 = pe.n;
+    var nm = displayFullName(n2) || '(sin nombre)';
+    var waitLabel = n2.certWaitDays!=null ? (n2.certWaitDays+' día'+(n2.certWaitDays===1?'':'s')+' de espera') : 'días de espera desconocidos';
+    html += '<div class="sitem">'
+      + '<div class="sitem-name">'+esc(nm)+'</div>'
+      + '<div class="sitem-data">'
+      + '<strong>Pueblo:</strong> '+esc(n2.birthPlace||'—')+'<br>'
+      + '<strong>Obtenida el:</strong> '+esc(fmtES(n2.certObtainedAt.slice(0,10)))+'<br>'
+      + '<strong>Tardó:</strong> '+waitLabel
+      + '</div>'
+      + '<button class="cert-req-restart" style="margin-top:.4rem" onclick="unmarkCertObtained(\''+n2.id+'\')" title="Deshacer">'
+      + '<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block;margin-right:.3rem"><path d="M3 12a9 9 0 1015-6.7"/><polyline points="18 2 18 6 14 6"/></svg> Deshacer'
+      + '</button>'
+      + '</div>';
+  }
+  html += '</div>';
+  body.innerHTML = html;
 }
 // Helper para el SVG de alerta (lo usábamos como string literal antes)
 function alert_svg_inline_str(){
@@ -2031,6 +2108,10 @@ function renderStats(){
 // por "solicitada" y luego se marcaron obtenidas — no las que se
 // rellenaron directamente sin pasar por ese tick.
 // ═══════════════════════════════════════════════════
+function fmtAvgDays(avg){
+  var r1 = avg.toFixed(1);
+  return r1.slice(-2)==='.0' ? r1.slice(0,-2) : r1;
+}
 function renderWaitTimes(){
   var body = document.getElementById('waittimes-body');
   if(!body) return;
@@ -2075,7 +2156,7 @@ function renderWaitTimes(){
       + '<div class="stat-row" onclick="toggleStatRow(this)">'
       + '<div class="stat-name"><span class="stat-caret">▸</span> '+esc(row.town)+'</div>'
       + '<div class="stat-bar-bg"><div class="stat-bar" style="width:'+(100*row.avg/max).toFixed(1)+'%"></div></div>'
-      + '<div class="stat-pct">'+row.avg.toFixed(1)+' días ('+row.people.length+')</div>'
+      + '<div class="stat-pct">'+fmtAvgDays(row.avg)+' días ('+row.people.length+')</div>'
       + '</div>'
       + detailHTML
       + '</div>';
