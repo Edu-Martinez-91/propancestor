@@ -233,6 +233,9 @@ h3 .ic{margin-right:.4rem;color:var(--parch2)}
 .cert-req-days{font-style:italic;color:var(--amber);font-weight:500;flex:1;min-width:0}
 .cert-req-restart{width:22px;height:22px;border-radius:50%;border:1px solid var(--parch3);background:#fff;color:var(--fog);cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s,transform .25s}
 .cert-req-restart:hover{background:var(--parch2);color:var(--ink);transform:rotate(-60deg)}
+.btn-undo{border-radius:14px;border:1px solid var(--parch3);background:#fff;color:var(--fog);cursor:pointer;padding:.3rem .7rem;display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-family:'Inter',sans-serif;transition:background .15s,color .15s}
+.btn-undo:hover{background:var(--parch2);color:var(--ink)}
+.btn-undo svg{flex-shrink:0}
 .badge{display:inline-block;padding:.08rem .4rem;border-radius:3px;font-size:.58rem;font-weight:700;letter-spacing:.04em}
 .badge.registro{background:rgba(74,138,92,.15);color:var(--moss)}
 .badge.parroquia{background:rgba(196,160,64,.2);color:#7a5c0c}
@@ -1988,8 +1991,8 @@ function renderObtainedRecent(){
       + '<strong>Obtenida el:</strong> '+esc(fmtES(n2.certObtainedAt.slice(0,10)))+'<br>'
       + '<strong>Tardó:</strong> '+waitLabel
       + '</div>'
-      + '<button class="cert-req-restart" style="margin-top:.4rem" onclick="unmarkCertObtained(\''+n2.id+'\')" title="Deshacer">'
-      + '<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block;margin-right:.3rem"><path d="M3 12a9 9 0 1015-6.7"/><polyline points="18 2 18 6 14 6"/></svg> Deshacer'
+      + '<button class="btn-undo" style="margin-top:.4rem" onclick="unmarkCertObtained(\''+n2.id+'\')" title="Deshacer">'
+      + '<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 12a9 9 0 1015-6.7"/><polyline points="18 2 18 6 14 6"/></svg> Deshacer'
       + '</button>'
       + '</div>';
   }
