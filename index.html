@@ -2792,11 +2792,20 @@ function isEmptyTreeValue(v){
   return v===undefined || v===null || v==='';
 }
 
-// Firma estable de un árbol completo (nodes+sibs), para detectar si dos
-// versiones son exactamente iguales sin tener que preguntar nada al usuario.
+// Firma estable de un árbol, para detectar si dos versiones son iguales.
+// SOLO cuenta los nodos desbloqueados: es exactamente el conjunto que
+// pushAllToCloud() sincroniza, así que es lo que debe compararse contra la
+// nube. Los nodos bloqueados son andamiaje local (placeholders vacíos que
+// ensureChildren() crea para poder pinchar sectores vacíos del abanico);
+// nunca llegan a la nube, y si se incluyeran aquí la firma local siempre
+// tendría cientos de claves de más → el aviso de comparación no pararía
+// nunca aunque el contenido real coincidiera.
 function treeSignature(nodesObj, sibsObj){
   var parts = [], ids = Object.keys(nodesObj).sort(), i;
-  for(i=0;i<ids.length;i++) parts.push(ids[i]+':'+JSON.stringify(nodesObj[ids[i]]));
+  for(i=0;i<ids.length;i++){
+    if(!nodesObj[ids[i]] || !nodesObj[ids[i]].unlocked) continue;
+    parts.push(ids[i]+':'+JSON.stringify(nodesObj[ids[i]]));
+  }
   var sids = Object.keys(sibsObj).sort();
   for(i=0;i<sids.length;i++) parts.push('sib:'+sids[i]+':'+JSON.stringify(sibsObj[sids[i]]));
   return parts.join('|');
@@ -2893,13 +2902,18 @@ function closeImportCompare(){
 // devuelve una lista de diferencias legibles. Solo para depurar por qué
 // el aviso de comparación no deja de aparecer aunque los totales coincidan.
 function diffTrees(curNodes, curSibs, impNodes, impSibs){
+  // Solo nodos desbloqueados, igual que treeSignature() — los placeholders
+  // bloqueados no se sincronizan y no cuentan para la comparación.
   var diffs = [], id, key, ids = {};
-  for(id in curNodes) ids[id]=true;
-  for(id in impNodes) ids[id]=true;
+  for(id in curNodes){ if(curNodes[id] && curNodes[id].unlocked) ids[id]=true; }
+  for(id in impNodes){ if(impNodes[id] && impNodes[id].unlocked) ids[id]=true; }
   var idList = Object.keys(ids).sort();
   for(var i=0;i<idList.length;i++){
     id = idList[i];
     var a = curNodes[id], b = impNodes[id];
+    a = (a && a.unlocked) ? a : null;
+    b = (b && b.unlocked) ? b : null;
+    if(!a && !b) continue;
     if(!a){ diffs.push(id+': solo existe en lo entrante'); continue; }
     if(!b){ diffs.push(id+': solo existe en lo actual'); continue; }
     for(key in a){
