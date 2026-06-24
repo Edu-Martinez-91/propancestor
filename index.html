@@ -224,6 +224,12 @@ h3 .ic{margin-right:.4rem;color:var(--parch2)}
 .cert-cta-btn:hover{background:#3d6f4c}
 .cert-cta-info{width:26px;height:26px;border-radius:50%;border:1px solid var(--parch3);background:#fff;color:var(--fog);font-style:italic;font-family:'EB Garamond',serif;font-weight:600;cursor:pointer;font-size:.85rem;line-height:1;padding:0;flex-shrink:0;transition:background .15s, color .15s}
 .cert-cta-info:hover{background:var(--parch2);color:var(--ink)}
+.archd-select{flex:1;font-size:.72rem;font-weight:600;padding:.45rem .65rem;border-radius:6px;border:1px solid var(--amber-lt);background:#fff;color:var(--amber);cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.02em;text-align:left}
+.archd-menu{display:none;position:absolute;top:100%;left:.9rem;right:.9rem;background:#fff;border:1px solid var(--parch3);border-radius:6px;box-shadow:var(--shadow-lg);z-index:80;max-height:280px;overflow-y:auto;margin-top:.2rem}
+.archd-menu.open{display:block}
+.archd-menu-item{padding:.55rem .8rem;font-size:.74rem;color:var(--ink);cursor:pointer;border-bottom:1px solid var(--parch2)}
+.archd-menu-item:last-child{border-bottom:none}
+.archd-menu-item:hover{background:var(--parch2)}
 
 /* Tick "acta solicitada" dentro de cada item de registro civil */
 .cert-req{display:flex;align-items:center;gap:.55rem;margin-top:.55rem;padding-top:.45rem;border-top:1px dashed var(--parch3);font-size:.7rem;color:var(--fog);flex-wrap:wrap}
@@ -455,7 +461,7 @@ textarea{resize:vertical;min-height:54px}
             <li>Persona que solicita: <em>Tercero, es para otra persona</em></li>
             <li>Inscrito fallecido: <em>Sí</em></li>
             <li>En calidad de: <em>Otros</em></li>
-            <li>Marca <em>Me opongo a la consulta de identidad de la DGP</em> (necesario al usar genealogía como motivo)</li>
+            <li>No hace falta marcar "Me opongo a la consulta de identidad de la DGP" — basta con indicar tus propios datos y tu DNI (ver "Documentación adjunta" más abajo); así ha funcionado sin problema</li>
           </ul>
         </li>
         <li>
@@ -557,6 +563,10 @@ textarea{resize:vertical;min-height:54px}
       <div class="cert-cta">
         <button class="cert-cta-btn" onclick="solicitarCertificado()"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="14 3 14 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>Solicitar certificado</button>
         <button class="cert-cta-info" onclick="showCertificadoInfo()" aria-label="Información">i</button>
+      </div>
+      <div class="cert-cta" style="padding-top:0;position:relative">
+        <button type="button" class="archd-select" onclick="toggleArchdMenu(event)">Solicitar acceso a archivo parroquial (archidiócesis) <span style="float:right">▾</span></button>
+        <div id="archd-menu" class="archd-menu"></div>
       </div>
       <div id="spanel-body"></div>
     </div>
@@ -2014,6 +2024,36 @@ var CERT_URL = 'https://sede.mjusticia.gob.es/sereci/initDatosGenerales?idMateri
 function solicitarCertificado(){
   var w = window.open(CERT_URL, '_blank', 'noopener,noreferrer');
   if(!w) window.location.href = CERT_URL;
+}
+
+// ═══════════════════════════════════════════════════
+// SOLICITAR ACCESO A ARCHIVO PARROQUIAL — por archidiócesis. Solo se
+// incluye un enlace cuando se ha verificado de verdad; añadir aquí la
+// archidiócesis correspondiente en cuanto se tenga un enlace fiable de más.
+// ═══════════════════════════════════════════════════
+var ARCHDIOCESE_LINKS = {
+  'Toledo': 'https://www.architoledo.org/wp-content/uploads/2025/08/solicitud-archivos-parroquiales.pdf'
+};
+function toggleArchdMenu(e){
+  e.stopPropagation();
+  var menu = document.getElementById('archd-menu');
+  if(menu.className.indexOf('open')>=0){ closeArchdMenu(); return; }
+  var html = '';
+  for(var name in ARCHDIOCESE_LINKS){
+    html += '<div class="archd-menu-item" onclick="solicitarArchivoParroquial(\''+name+'\')">'+esc(name)+'</div>';
+  }
+  menu.innerHTML = html;
+  menu.className = 'archd-menu open';
+}
+function closeArchdMenu(){
+  document.getElementById('archd-menu').className = 'archd-menu';
+}
+function solicitarArchivoParroquial(name){
+  closeArchdMenu();
+  var url = ARCHDIOCESE_LINKS[name];
+  if(!url) return;
+  var w = window.open(url, '_blank', 'noopener,noreferrer');
+  if(!w) window.location.href = url;
 }
 
 function showCertificadoInfo(){
@@ -3711,6 +3751,8 @@ document.addEventListener('click', function(e){
   // cerrar dropdowns al pulsar fuera
   var sr = document.getElementById('search-results');
   if(sr && e.target.id!=='searchbox') sr.className='';
+  var am = document.getElementById('archd-menu');
+  if(am && am.className.indexOf('open')>=0) closeArchdMenu();
 });
 // Cerrar al hacer clic fuera del modal — pero sin confundir un "click" real
 // con el final de una selección de texto que el usuario arrastró fuera del
